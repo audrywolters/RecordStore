@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Sat Apr 26 16:22:38 CDT 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.1.1 - (1458268): instance a816c00e-0145-9feb-24a1-000007f54938 
+on database directory /Users/BLACKTIEWHITENOISE/Documents/Java/RecordStoreAudry/honeyDB with class loader sun.misc.Launcher$AppClassLoader@58644d46 
+Loaded from file:/Users/BLACKTIEWHITENOISE/Documents/Java/RecordStoreAudry/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0-b132
+user.dir=/Users/BLACKTIEWHITENOISE/Documents/Java/RecordStoreAudry
+os.name=Mac OS X
+os.arch=x86_64
+os.version=10.9.2
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
