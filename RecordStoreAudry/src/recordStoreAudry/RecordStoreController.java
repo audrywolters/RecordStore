@@ -45,9 +45,23 @@ public class RecordStoreController {
 		model.cleanUp();
 	}
 
+	
 	public void requestAddRecord(Record record) {
 		model.addRecord(record);
-
 	}
+	
+	
+	public void findAllRecords() {
+		//TODO put this in the beginning and change this method to sell record
+		model.requestAllRecords();
+		LinkedList<Record> allRecords = model.getAllRecords();
+		Record soldRecord = view.menuSellRecord(allRecords);
+		model.updateRecord(soldRecord);
+	}
+
+	//public void requestItem(int idFromUser, String tableName) {
+		//model.getItem(idFromUser, tableName);
+		
+	//}
 
 }

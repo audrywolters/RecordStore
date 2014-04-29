@@ -18,12 +18,16 @@ public class RecordStoreModel {
 	ResultSet rs = null;
 	PreparedStatement psInsert = null;
 	private static LinkedList<Statement> allStatements = new LinkedList<Statement>();
+	private static LinkedList<Record> allRecords = new LinkedList<Record>();
 
+
+	//constructor
 	public RecordStoreModel(RecordStoreController rsController) {
 		this.controller = rsController;
 	}
 
-	// /CONNECT TO DATABASE///
+	
+	///CONNECT TO DATABASE///
 	public void createConnection() {
 		try {
 			Class.forName(driver);
@@ -41,7 +45,8 @@ public class RecordStoreModel {
 		}
 	}
 
-	// /MAKE TABLES///
+	
+	///MAKE TABLES///
 	public void createTables() throws SQLException {
 		// table statment Strings
 		String createRecordsTable = "CREATE TABLE Records (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
@@ -84,7 +89,8 @@ public class RecordStoreModel {
 		}
 	}
 
-	//
+	
+	//add a new record to database
 	public void addRecord(Record record) {
 		// prepare variables
 		String title = record.getTitle();
@@ -122,7 +128,73 @@ public class RecordStoreModel {
 		}
 
 	}
+	
+	
+	/*
+	////////TODO DELETE
+	  System.out.println("Creating statement...");
+      stmt = conn.createStatement();
+      String sql = "UPDATE Registration " +
+                   "SET age = 30 WHERE id in (100, 101)";
+      stmt.executeUpdate(sql);
+   ///////*/
 
+	public void updateRecord(Record record) {
+		// TODO add column variable to make code reusey
+		String updateRecord = "UPDATE Records "
+				+ "SET Sold = 1, PriceSold = " + record.getPriceSold() + ", DateSold = " + record.getDateSold()
+				+ " WHERE Id = " + record.getId();
+		
+		///****************************
+		/// Columns of type 'DATE' cannot hold values of type 'INTEGER'. 
+		try {
+			//statement = connection.prepareStatement(updateRecord);
+			statement.executeUpdate(updateRecord);
+			System.out.println("Record updated");
+		} catch (SQLException e) {
+			System.out.println("Unable to update record.");
+			// TODO delete stack trace
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
+	
+	
+	/* TODO DELETE IF NOT KEPT
+	
+	//search database for single item
+	//table name comes from whoever called it (be it searchForConsigner() or searchForRecord())
+	//this is for code reuse
+	public void getItem(int idFromUser, String tableName) {
+		String itemSearchQuery = "SELECT * FROM " + tableName 
+							   + "WHERE Id = " + idFromUser; 
+		
+		//try to get the item from db
+		try {
+			rs = statement.executeQuery(itemSearchQuery);
+		} catch (SQLException se) {
+			System.out.println("Error fetching item");
+			//TODO delete stack trace;
+			se.printStackTrace();
+		}
+		
+		
+		try {
+			while (rs.next()) {
+				
+			}
+		}
+		}
+		*/
+	
+	
+	
+	
+	
+	
+	
 	public void addTestData() throws SQLException {
 		// /RECORDS///
 		// test data
@@ -205,8 +277,6 @@ public class RecordStoreModel {
 	}
 
 	public void requestAllRecords() {
-		LinkedList<Record> allRecords = new LinkedList<Record>();
-
 		// fetch the data
 		String fetchAllRecords = "SELECT * FROM Records";
 		try {
@@ -221,7 +291,7 @@ public class RecordStoreModel {
 		try {
 			while (rs.next()) {
 				// TODO delete excess data
-				// int id = rs.getInt("Id");
+				int id = rs.getInt("Id");
 				String title = rs.getString("Title");
 				String artist = rs.getString("Artist");
 				// int consignerId = rs.getInt("ConsignerId");
@@ -232,6 +302,7 @@ public class RecordStoreModel {
 															 * consignerId,
 															 * dateAdded,
 															 */price);
+				r.setId(id);
 				allRecords.add(r);
 
 			}
@@ -241,9 +312,12 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 
+		//print all records
+		/*
 		for (Record r : allRecords) {
 			System.out.println(r);
 		}
+		*/
 
 	}
 
@@ -354,5 +428,20 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 	}
+
+	
+
+	//get and set
+	public LinkedList<Record> getAllRecords() {
+		return allRecords;
+	}
+
+
+
+
+	
+	
+	
+	
 
 }
