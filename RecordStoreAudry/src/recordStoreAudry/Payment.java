@@ -1,6 +1,6 @@
 package recordStoreAudry;
 
-import java.sql.*;
+import java.util.Calendar;
 
 public class Payment {
 	private int id;
@@ -9,7 +9,7 @@ public class Payment {
 	private boolean outstanding;
 	private double amountDue;
 	private double amountPaid;
-	private Date dateMade;
+	private Calendar dateMade;
 
 	// constructor
 	public Payment(int d, int rcrdD, int cnsgnrD, boolean tstndng) {
@@ -36,11 +36,11 @@ public class Payment {
 		this.id = id;
 	}
 
-	public Date getDateMade() {
+	public Calendar getDateMade() {
 		return dateMade;
 	}
 
-	public void setDateMade(Date dateMade) {
+	public void setDateMade(Calendar dateMade) {
 		this.dateMade = dateMade;
 	}
 

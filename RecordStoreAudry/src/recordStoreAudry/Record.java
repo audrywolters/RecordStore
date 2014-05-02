@@ -1,42 +1,58 @@
 package recordStoreAudry;
 
-import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public class Record {
 	private int id;
 	private String title;
 	private String artist;
 	private int consignerId;
-	private Date dateAdded;
-	private Date dateSold;
+	private Calendar dateAdded;
+	private Calendar dateSold;
 	private double price;
 	private double priceSold;
 	private boolean barginBin;
 	private boolean sold;
 
 	// constructor
-	public Record(/* int d, */String ttl, String rtst, /* int cnsgnrD, Date dtDdd, */
-			double prc) {
-		// this.id = d;
-		this.title = ttl;
-		this.artist = rtst;
-		// this.consignerId = cnsgnrD;
-		// this.dateAdded = dtDdd;
-		this.price = prc;
+	public Record(String titl, String artst, double pric, int consgnId, Calendar dateAdd) {
+		//this.id = id;
+		this.title = titl;
+		this.artist = artst;
+		this.price = pric;
+		this.consignerId = consgnId;
+		this.dateAdded = dateAdd;
+		this.barginBin = false;
+		this.sold = false;
 	}
 
 	// to string
-	public String toString() {
-		return "Record [id=" + id + ", title=" + title + ", artist=" + artist
-				+ ", consignerId=" + consignerId + ", dateAdded=" + dateAdded
-				+ ", dateSold=" + dateSold + ", price=" + price
-				+ ", priceSold=" + priceSold + ", barginBin=" + barginBin
-				+ ", sold=" + sold + "]";
-	}
+	
 
 	// get and set
 	public int getId() {
 		return id;
+	}
+
+	@Override
+	public String toString() {
+		//parse Calendars for printing
+		String formatDateSold;
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String formatDateAdded = sdf.format(dateAdded.getTime());
+		if (dateSold == null) {
+			 formatDateSold = "Not yet Sold";
+		} else {
+			//print date sold
+			 formatDateSold = sdf.format(dateSold.getTime());
+		}
+		return "Record [id=" + id + ", title=" + title + ", artist=" + artist
+				+ ", consignerId=" + consignerId + ", dateAdded=" + formatDateAdded
+				+ ", dateSold=" + formatDateSold + ", price=" + price
+				+ ", priceSold=" + priceSold + ", barginBin=" + barginBin
+				+ ", sold=" + sold + "]";
 	}
 
 	public void setId(int id) {
@@ -67,20 +83,20 @@ public class Record {
 		this.consignerId = consignerId;
 	}
 
-	public Date getDateAdded() {
+	public Calendar getDateAdded() {
 		return dateAdded;
 	}
 
-	public void setDateAdded(Date dateAdded) {
+	public void setDateAdded(Calendar dateAdded) {
 		this.dateAdded = dateAdded;
 	}
 
-	public Date getDateSold() {
+	public Calendar getDateSold() {
 		return dateSold;
 	}
 
-	public void setDateSold(Date dateSold) {
-		this.dateSold = dateSold;
+	public void setDateSold(Calendar now) {
+		this.dateSold = now;
 	}
 
 	public double getPrice() {

@@ -1,6 +1,10 @@
 package recordStoreAudry;
 
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 public class RecordStoreModel {
@@ -8,7 +12,7 @@ public class RecordStoreModel {
 	// connect to database
 	private static String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 	private static String protocol = "jdbc:derby:";
-	private static String databaseName = "honeyDB";
+	private static String databaseName = "recordStoreDB";
 	// creds for database
 	private static final String USER = "temp";
 	private static final String PASS = "password";
@@ -18,7 +22,8 @@ public class RecordStoreModel {
 	ResultSet rs = null;
 	PreparedStatement psInsert = null;
 	private static LinkedList<Statement> allStatements = new LinkedList<Statement>();
-	private static LinkedList<Record> allRecords = new LinkedList<Record>();
+	
+
 
 
 	//constructor
@@ -27,6 +32,7 @@ public class RecordStoreModel {
 	}
 
 	
+
 	///CONNECT TO DATABASE///
 	public void createConnection() {
 		try {
@@ -44,17 +50,19 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 	}
-
 	
+	
+
+
 	///MAKE TABLES///
-	public void createTables() throws SQLException {
-		// table statment Strings
+	public void createTables() {
+		// table statement Strings
 		String createRecordsTable = "CREATE TABLE Records (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
 				+ "Title varchar(40), Artist varchar(40), ConsignerId int, DateAdded date, DateSold date, Sold boolean, "
 				+ "BarginBin boolean, Price double, PriceSold double)";
 
 		String createConsignersTable = "CREATE TABLE Consigners (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
-				+ "Name varchar(40), Phone varchar(10), MoneyOwed double)";
+				+ "Name varchar(40), Phone varchar(13), MoneyOwed double)";
 
 		String createPaymentsTable = "CREATE TABLE Payments (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
 				+ "RecordId int, ConsignerId int, Outstanding boolean, AmountDue double, AmountPaid double, DateMade date)";
@@ -68,30 +76,41 @@ public class RecordStoreModel {
 			statement.executeUpdate(createRecordsTable);
 			statement.executeUpdate(createConsignersTable);
 			statement.executeUpdate(createPaymentsTable);
-			System.out
-					.println("Records, Consigners, and Payments Tables created");
-		} catch (SQLException sqle) {
-			if (sqle.getSQLState().startsWith("X0")) { // if tables exist
-				// delete them
-				statement.executeUpdate(deleteRecords);
-				statement.executeUpdate(deleteConsigners);
-				statement.executeUpdate(deletePayments);
-				// and recreate
-				statement.executeUpdate(createRecordsTable);
-				statement.executeUpdate(createConsignersTable);
-				statement.executeUpdate(createPaymentsTable);
-				System.out
-						.println("Tables already exist. Dropped and recreated.");
-			} else {
-				System.out.println("Something unknown went wrong!");
-				throw sqle;
-			}
+			System.out.println("Records, Consigners, and Payments Tables created");
+
+		} catch (SQLException se) {
+
+			// if tables exist				
+			if (se.getSQLState().startsWith("X0")) { 		
+
+				try {
+					// delete them
+					statement.executeUpdate(deleteRecords);
+					statement.executeUpdate(deleteConsigners);
+					statement.executeUpdate(deletePayments);
+					// and recreate
+					statement.executeUpdate(createRecordsTable);
+					statement.executeUpdate(createConsignersTable);
+					statement.executeUpdate(createPaymentsTable);
+					System.out
+					.println("Tables already exist. Dropped and recreated.");
+				} catch (SQLException e) {
+					System.out.println("Something went wrong while creating tables.");
+					//TODO delete stackTrace
+					e.printStackTrace();
+				}
+			} 
 		}
 	}
 
 	
-	//add a new record to database
-	public void addRecord(Record record) {
+	
+
+	///ADD NEW RECORD TO DB///
+	public boolean addUserRecord(Record record) {
+		//prepare id
+		//controller.setRecordId();
+	
 		// prepare variables
 		String title = record.getTitle();
 		String artist = record.getArtist();
@@ -119,75 +138,92 @@ public class RecordStoreModel {
 			psInsert.setDouble(6, price);
 			psInsert.executeUpdate();
 
-			System.out.println("Added " + title + " to database");
 
+			System.out.println("Added " + title + " to database");
+			return true;
 		} catch (SQLException e) {
 			System.out.println("Error adding record to database");
 			// delete stack trace
 			e.printStackTrace();
+			return false;
 		}
 
 	}
-	
-	
-	/*
-	////////TODO DELETE
-	  System.out.println("Creating statement...");
-      stmt = conn.createStatement();
-      String sql = "UPDATE Registration " +
-                   "SET age = 30 WHERE id in (100, 101)";
-      stmt.executeUpdate(sql);
-   ///////*/
 
-	public void updateRecord(Record record) {
-		// TODO add column variable to make code reusey
-		String updateRecord = "UPDATE Records "
-				+ "SET Sold = 1, PriceSold = " + record.getPriceSold() + ", DateSold = " + record.getDateSold()
-				+ " WHERE Id = " + record.getId();
+	
+	
+
+	///UPDATE SOLD RECORD TO DB///
+	public boolean updateSoldRecord(Record record) {	
+		//prep date for SQL
+		Calendar dateSold = record.getDateSold();
+		java.sql.Date sqlDateSold =  new java.sql.Date(dateSold.getTime().getTime() );
 		
-		///****************************
-		/// Columns of type 'DATE' cannot hold values of type 'INTEGER'. 
+
+		String updateRecord = "UPDATE Records"
+				+ " SET DateSold = '" + sqlDateSold + "', Sold = 'TRUE', PriceSold = " + record.getPriceSold()
+				+ " WHERE Id = " + record.getId();
+
 		try {
-			//statement = connection.prepareStatement(updateRecord);
 			statement.executeUpdate(updateRecord);
 			System.out.println("Record updated");
+			System.out.println(record);
+			return true;
 		} catch (SQLException e) {
 			System.out.println("Unable to update record.");
 			// TODO delete stack trace
 			e.printStackTrace();
+			return false;
 		}
+	}
+
+	
+	
+	///DELETE RECORD///
+	public void deleteRecord(Record record) {
+		String deleteRecord = "DELETE FROM Records "
+				+ "WHERE Id=" + record.getId();
 		
-		
+		try {
+			statement.executeUpdate(deleteRecord);
+			System.out.println("Record Deleted");
+		} catch (SQLException e) {
+			System.out.println("Unable to delete record");
+			//TODO DST
+			e.printStackTrace();
+		}
 		
 	}
 	
 	
-	/* TODO DELETE IF NOT KEPT
 	
-	//search database for single item
-	//table name comes from whoever called it (be it searchForConsigner() or searchForRecord())
-	//this is for code reuse
-	public void getItem(int idFromUser, String tableName) {
-		String itemSearchQuery = "SELECT * FROM " + tableName 
-							   + "WHERE Id = " + idFromUser; 
+	
+	///ADD NEW CONSIGNER///
+	public boolean addConsigner(Consigner consigner) {
+		//get variables out of consigner object
+		String name = consigner.getName();
+		String phone = consigner.getPhone();		
 		
-		//try to get the item from db
-		try {
-			rs = statement.executeQuery(itemSearchQuery);
-		} catch (SQLException se) {
-			System.out.println("Error fetching item");
-			//TODO delete stack trace;
-			se.printStackTrace();
-		}
-		
+		String insertConsigner = "INSERT INTO Consigners (Name, Phone) VALUES (?, ?)";
 		
 		try {
-			while (rs.next()) {
-				
-			}
+			psInsert = connection.prepareStatement(insertConsigner);
+			allStatements.add(psInsert);
+
+			// insert data
+			psInsert.setString(1, name);
+			psInsert.setString(2, phone);
+			System.out.println("Consigner added to database");
+			return true;
+		} catch (SQLException e) {
+			System.out.println("Unable to add consigner to database");
+			// TODO DST
+			e.printStackTrace();
+			return false;
 		}
-		}
-		*/
+
+		
+	}
 	
 	
 	
@@ -195,65 +231,86 @@ public class RecordStoreModel {
 	
 	
 	
-	public void addTestData() throws SQLException {
+	///ADD TEST DATA///
+	public void addTestData() { 
 		// /RECORDS///
 		// test data
 		String[] titles = { "Outside", "Low", "The Fragile", "Head Over Heels" };
-		String[] artists = { "David Bowie", "David Bowie", "Nine Inch Nails",
-				"Cocteau Twins" };
+		String[] artists = { "David Bowie", "David Bowie", "Nine Inch Nails", "Cocteau Twins" };
 		int[] consigners = { 1, 1, 2, 3 };
-		Date[] datesAdded = { Date.valueOf("2014-04-10"),
-				Date.valueOf("2014-04-10"), Date.valueOf("2014-03-13"),
-				Date.valueOf("2014-04-10") };
+		Date[] datesAdded = { Date.valueOf("2014-03-10"),
+				Date.valueOf("2014-03-10"), Date.valueOf("2014-03-13"),
+				Date.valueOf("2013-04-02") };
 		// dateSold null
 		Boolean[] solds = { false, false, false, true };
 		Boolean[] barginBins = { false, false, false, false };
 		double[] prices = { 10.00, 10.00, 7.00, 9.00 };
 		// priceSold null
 
+
 		// statements
 		String recordsInsert = "INSERT INTO Records "
 				+ "(Title, Artist, ConsignerId, DateAdded, Sold, BarginBin, Price) "
 				+ "VALUES " + "(?, ?, ?, ?, ?, ?, ?)";
-		psInsert = connection.prepareStatement(recordsInsert);
-		allStatements.add(psInsert);
+		try {
+			psInsert = connection.prepareStatement(recordsInsert);
+			allStatements.add(psInsert);
+			// insert data
+			for (int i = 0; i < titles.length; i++) {
+				psInsert.setString(1, titles[i]);
+				psInsert.setString(2, artists[i]);
+				psInsert.setInt(3, consigners[i]);
+				psInsert.setDate(4, datesAdded[i]);
+				psInsert.setBoolean(5, solds[i]);
+				psInsert.setBoolean(6, barginBins[i]);
+				psInsert.setDouble(7, prices[i]);
+				psInsert.executeUpdate();
+				//update id for controller
+				controller.setRecordId();
+			}
+			System.out.println("Added records to database");
 
-		// insert data
-		for (int i = 0; i < titles.length; i++) {
-			psInsert.setString(1, titles[i]);
-			psInsert.setString(2, artists[i]);
-			psInsert.setInt(3, consigners[i]);
-			psInsert.setDate(4, datesAdded[i]);
-			psInsert.setBoolean(5, solds[i]);
-			psInsert.setBoolean(6, barginBins[i]);
-			psInsert.setDouble(7, prices[i]);
-			psInsert.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Error creating test data.");
+			//TODO delete ST
+			e.printStackTrace();
 		}
-		System.out.println("Added records to database");
 
-		// /CONSIGNERS///
-		// test data
+
+
+		///CONSIGNERS///
+		//test data
 		String[] names = { "Jeremiah Johnson", "Tom Lang", "Jill Ranwieler" };
-		String[] phones = { "6121234567", "6123334444", "6515556666" };
+		String[] phones = { "(612)123-4567", "(612)333-4444", "(651)666-7890" };
 		double[] moneyOweds = { 0, 0, 0 };
 
-		// statements
+		//statements
 		String consignerInsert = "INSERT INTO Consigners"
 				+ "(Name, Phone, MoneyOwed)" + "VALUES" + "(?, ?, ?)";
-		psInsert = connection.prepareStatement(consignerInsert);
-		allStatements.add(psInsert);
+		try {
+			psInsert = connection.prepareStatement(consignerInsert);
+			allStatements.add(psInsert);
+			//insert data
+			for (int i = 0; i < names.length; i++) {
+				psInsert.setString(1, names[i]);
+				psInsert.setString(2, phones[i]);
+				psInsert.setDouble(3, moneyOweds[i]);
+				psInsert.executeUpdate();
+				//update id for controller
+				controller.setConsignerId();
+			}
+			System.out.println("Added consigners to database.");
 
-		// insert data
-		for (int i = 0; i < names.length; i++) {
-			psInsert.setString(1, names[i]);
-			psInsert.setString(2, phones[i]);
-			psInsert.setDouble(3, moneyOweds[i]);
-			psInsert.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Error creating test data.");
+			// TODO DST
+			e.printStackTrace();
 		}
-		System.out.println("Added consigners to database.");
 
-		// /PAYMENTS///
-		// data
+
+
+		///PAYMENTS///
+		//data
 		int[] recordIds = { 1, 3 };
 		int[] consignerIds = { 1, 2 };
 		boolean[] outstandings = { false, false };
@@ -262,22 +319,40 @@ public class RecordStoreModel {
 		String paymentInsert = "INSERT INTO Payments"
 				+ "(RecordId, ConsignerId, Outstanding)" + "VALUES"
 				+ "(?, ?, ?)";
-		psInsert = connection.prepareStatement(paymentInsert);
-		allStatements.add(psInsert);
 
-		// insert data
-		for (int i = 0; i < recordIds.length; i++) {
-			psInsert.setInt(1, recordIds[i]);
-			psInsert.setInt(2, consignerIds[i]);
-			psInsert.setBoolean(3, outstandings[i]);
-			psInsert.executeUpdate();
+		try {
+			psInsert = connection.prepareStatement(paymentInsert);
+			allStatements.add(psInsert);
+			//insert test data
+			for (int i = 0; i < recordIds.length; i++) {
+				psInsert.setInt(1, recordIds[i]);
+				psInsert.setInt(2, consignerIds[i]);
+				psInsert.setBoolean(3, outstandings[i]);
+				psInsert.executeUpdate();
+				//update id for controller
+				controller.setPaymentId();
+			}
+			System.out.println("Added payments to the database");
+
+		} catch (SQLException e) {
+			System.out.println("Error creating test data.");
+			// TODO DST
+			e.printStackTrace();
 		}
-		System.out.println("Added payments to the database");
-
 	}
-
+	/*
+	psInsert.setString(1, titles[i]);
+	psInsert.setString(2, artists[i]);
+	psInsert.setInt(3, consigners[i]);
+	psInsert.setDate(4, datesAdded[i]);
+	psInsert.setBoolean(5, solds[i]);
+	psInsert.setBoolean(6, barginBins[i]);
+	psInsert.setDouble(7, prices[i]);
+	*/
+	
+	///GET ALL RECORDS AND STORE THEM///
 	public void requestAllRecords() {
-		// fetch the data
+		//fetch the data
 		String fetchAllRecords = "SELECT * FROM Records";
 		try {
 			rs = statement.executeQuery(fetchAllRecords);
@@ -287,23 +362,24 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 
-		// put data into object and then linked list
+		//put data into object and then linked list
 		try {
 			while (rs.next()) {
-				// TODO delete excess data
+				//get data from result set to make object
 				int id = rs.getInt("Id");
 				String title = rs.getString("Title");
 				String artist = rs.getString("Artist");
-				// int consignerId = rs.getInt("ConsignerId");
-				// Date dateAdded = rs.getDate("DateAdded");
 				double price = rs.getDouble("Price");
+				int consignerId = rs.getInt("ConsignerId");
+				//parse date 
+				Date dateAdded = rs.getDate("DateAdded");
+				Calendar calAdded = new GregorianCalendar();
+				calAdded.setTime(dateAdded);
 
-				Record r = new Record(/* id, */title, artist, /*
-															 * consignerId,
-															 * dateAdded,
-															 */price);
+				Record r = new Record(title, artist, price, consignerId, calAdded);
 				r.setId(id);
-				allRecords.add(r);
+				
+				controller.addToAllRecords(r);
 
 			}
 		} catch (SQLException se) {
@@ -311,19 +387,13 @@ public class RecordStoreModel {
 			// TODO delete stack trace
 			se.printStackTrace();
 		}
-
-		//print all records
-		/*
-		for (Record r : allRecords) {
-			System.out.println(r);
-		}
-		*/
-
 	}
 
-	public void requestAllConsigners() {
-		LinkedList<Consigner> allConsigners = new LinkedList<Consigner>();
+	
+	
 
+	///GET ALL CONSIGNERS AND STORE THEM///
+	public void requestAllConsigners() {
 		// fetch all data
 		String fetchAllConsigners = "SELECT * FROM Consigners";
 		try {
@@ -342,25 +412,22 @@ public class RecordStoreModel {
 				String phone = rs.getString("Phone");
 				// double moneyOwed = rs.getDouble("MoneyOwed");
 
-				Consigner c = new Consigner(id, name, phone);
-				allConsigners.add(c);
+				Consigner c = new Consigner (name, phone);
+				c.setId(id);
+				controller.addToAllConsigners(c);
 			}
 		} catch (SQLException se) {
 			System.out.println("Error reading consigner data");
 			// TODO delete stack trace
 			se.printStackTrace();
 		}
-
-		// print data
-		for (Consigner c : allConsigners) {
-			System.out.println(c);
-		}
-
 	}
 
-	public void requestAllPayments() {
-		LinkedList<Payment> allPayments = new LinkedList<Payment>();
 
+	
+	
+	///GET ALL PAYMENTS AND STORE THEM///
+	public void requestAllPayments() {
 		// fetch all data
 		String fetchAllPayments = "SELECT * FROM Payments";
 		try {
@@ -379,21 +446,19 @@ public class RecordStoreModel {
 				int consignerId = rs.getInt("ConsignerId");
 				boolean outstanding = rs.getBoolean("Outstanding");
 				Payment p = new Payment(id, recordId, consignerId, outstanding);
-				allPayments.add(p);
+				controller.addToAllPayments(p);
 			}
 		} catch (SQLException se) {
 			System.out.println("Error reading payment data");
 			// TODO delete stack trace
 			se.printStackTrace();
 		}
-
-		// print data
-		for (Payment p : allPayments) {
-			System.out.println(p);
-		}
-
 	}
 
+
+	
+	
+	///SHUT DOWN DATABASE///
 	public void cleanUp() {
 		// close result set
 		try {
@@ -429,19 +494,10 @@ public class RecordStoreModel {
 		}
 	}
 
-	
-
-	//get and set
-	public LinkedList<Record> getAllRecords() {
-		return allRecords;
-	}
 
 
 
 
-	
-	
-	
-	
+
 
 }

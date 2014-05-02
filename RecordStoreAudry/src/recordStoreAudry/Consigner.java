@@ -12,8 +12,8 @@ public class Consigner {
 	private double moneyOwed;
 
 	// constructor
-	public Consigner(int d, String nm, String phn) {
-		this.id = d;
+	public Consigner(String nm, String phn) {
+		//this.id = d;
 		this.name = nm;
 		this.phone = phn;
 	}
