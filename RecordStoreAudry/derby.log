@@ -1,7 +1,7 @@
 ----------------------------------------------------------------
-Mon Apr 28 23:01:38 CDT 2014:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.1.1 - (1458268): instance a816c00e-0145-aba5-2566-000007f465a8 
-on database directory /Users/BLACKTIEWHITENOISE/Git/RecordStore/RecordStoreAudry/honeyDB with class loader sun.misc.Launcher$AppClassLoader@58644d46 
+Fri May 02 16:27:06 CDT 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.1.1 - (1458268): instance a816c00e-0145-bed5-61bd-000007f42a20 
+on database directory /Users/BLACKTIEWHITENOISE/Git/RecordStore/RecordStoreAudry/recordStoreDB with class loader sun.misc.Launcher$AppClassLoader@58644d46 
 Loaded from file:/Users/BLACKTIEWHITENOISE/Git/RecordStore/RecordStoreAudry/lib/derby.jar
 java.vendor=Oracle Corporation
 java.runtime.version=1.8.0-b132
