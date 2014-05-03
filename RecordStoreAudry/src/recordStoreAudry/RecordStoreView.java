@@ -32,9 +32,11 @@ public class RecordStoreView {
 					+ "5. Pay a Consigner \n"
 					+ "6. View/Delete a Consigner \n" 
 					+ "PAYMENTS \n"
-					+ "7. View outstanding payments \n"
-					+ "8. View past payments \n"
-					+ "0. QUIT \n"
+					+ "7. Make a payment \n"
+					+ "8. View outstanding payments \n"
+					+ "9. View past payments \n"
+					+ "QUIT \n"
+					+ "0. Quit Record Store Manager \n"
 					+ "-----------------------------");
 			int userChoice = sInt.nextInt();
 
@@ -70,17 +72,17 @@ public class RecordStoreView {
 				controller.deleteRecord(record);
 			} 
 			break;
-		
+
 		} case 4: {
 			Consigner consigner = addConsigner();
 			controller.addConsigner(consigner);
 		}
-		
+
 
 
 		} 
 	}
-	
+
 
 
 	//menu and view for adding a record to the database
@@ -90,29 +92,67 @@ public class RecordStoreView {
 		String title = sStrng.nextLine();
 		System.out.println("Enter the artist of the record:");
 		String artist = sStrng.nextLine();
-		System.out.println("Enter the price of the record:");
-		double price = sDbl.nextDouble();
-		System.out.println("Enter the Id of the Consigner:");
-		int consignerId = sInt.nextInt();
-		Calendar dateAdded = new GregorianCalendar();
 
-		//create record
-		Record record = new Record(title, artist, price, consignerId, dateAdded);
+		//check if too many copies
+		boolean tooMany = controller.tooManyCopies(title, artist);
 
-		//send to controller to send to DB
-		controller.requestAddRecord(record);
+		//
+		if(tooMany) {
+			System.out.println("Sorry, there are too many copies of " + title);
+			runMenu();
+		} else {
+			System.out.println("Enter the price of the record:");
+			double price = sDbl.nextDouble();
+			System.out.println("Enter the Id of the Consigner:");
+			int consignerId = sInt.nextInt();
+			Calendar dateAdded = new GregorianCalendar();
+
+			//TODO add validation
+
+			//create record
+			Record record = new Record(title, artist, price, consignerId, dateAdded);
+
+			//send to controller to send to DB
+			controller.requestAddRecord(record);
+		}
 	}
-	
+
+
+	///ASK USER TO MOVE TO BARGIN BIN///
+	public int moveRecordOrCall(Record oldRecord, String area) {
+		if(oldRecord != null && area.equals("Bargin Bin")) {
+			System.out.println("\n***" + oldRecord.getTitle() + " has been in inventory for more than 30 days.***\n"
+					+ "1. Move to Bargin Bin \n"
+					+ "2. Call Consigner \n");
+
+			int userChoice = sInt.nextInt();
+			return userChoice;
+		} else if (oldRecord != null && area.equals("Charity")) {
+			System.out.println("\n***" + oldRecord.getTitle() + " has been in Bargin Bin for more than 1 year.***\n"
+					+ "1. Donate to Charity \n"
+					+ "2. Call Consigner \n");
+
+			int userChoice = sInt.nextInt();
+			return userChoice;
+		}
+		//TODO add validation
+		return -1;
+	}
+
+
+
 	public Consigner addConsigner() {
 		//get data from user
 		System.out.println("Enter the name of the consigner");
 		String name = sStrng.nextLine();
 		System.out.println("Enter the phone number of the consigner [(XXX)XXX-XXXX]");
 		String phone = sStrng.nextLine();
-			
+
+		//TODO add validation
+
 		//create new consigner
 		Consigner consigner = new Consigner(name, phone);
-		
+
 		return consigner;
 	}
 
@@ -123,6 +163,7 @@ public class RecordStoreView {
 		System.out.println("Enter the Id of the item.");
 		int idFromUser = sInt.nextInt();
 		return idFromUser;
+		//TODO add validation
 	}
 
 
@@ -133,23 +174,24 @@ public class RecordStoreView {
 		System.out.println("Is this the record you were looking for? [y/n]");
 		String userChoice = sStrng.nextLine();
 		return userChoice;
+		//TOOD add validation
 	}
 
 	public String isThisYourConsigner(Consigner consigner) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public String isThisYourPayment(Payment payment) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
+	//delte or ignore
 	private int editOrDeleteMenu() {
 		System.out.println("1. Delete");
 		System.out.println("2. Main Menu");
 		int userChoice = sInt.nextInt();
 		return userChoice;
+		//TODO add Val
 
 	}
 
@@ -159,6 +201,7 @@ public class RecordStoreView {
 		System.out.println("How much is this record selling for?");
 		double priceSold = sDbl.nextDouble();
 		return priceSold;
+		//TODO add Val
 	}
 
 

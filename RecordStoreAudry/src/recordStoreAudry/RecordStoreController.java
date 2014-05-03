@@ -5,7 +5,6 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 public class RecordStoreController {
-
 	private static RecordStoreModel model;
 	private static RecordStoreView view;
 	//ids kept track of here
@@ -37,6 +36,12 @@ public class RecordStoreController {
 		model.requestAllConsigners();
 		model.requestAllPayments();
 
+		//check if records need to be moved
+		checkIfOld();
+
+
+
+
 		// launch the menu, get the user's choice
 		view.runMenu();
 
@@ -45,10 +50,12 @@ public class RecordStoreController {
 	}
 
 
+
 	///ADD NEW RECORD////
 	public void requestAddRecord(Record record) {
+		//boolean sent from model to see if record was added
 		boolean successful = model.addUserRecord(record);
-
+		//if the record was added, update in allRecords
 		if(successful) {
 			allRecords.add(record);
 			setRecordId();
@@ -59,16 +66,21 @@ public class RecordStoreController {
 		}
 	}
 
+	///CHECK IF THERE ARE TOO MANY COPIES OF RECORD///
+	public boolean tooManyCopies(String title, String artist) {
+
+		return true;
+
+	}
 
 	///UPDATE SOLD RECORD///
 	public void requestUpdateSoldRecord() {
-
 		Record record = searchForRecord();
 		double priceSold = view.getPriceFromUser();
 		record.setSold(true);
 		record.setPriceSold(priceSold);
 		//prep data
-		
+
 		Calendar now = GregorianCalendar.getInstance();
 		//don't parse here, parse in sql
 		//java.sql.Date dateSold = new java.sql.Date(today.getTime());
@@ -79,7 +91,8 @@ public class RecordStoreController {
 	}
 
 
-	///SEARCH FOR RECORD///
+
+	///SEARCH FOR A RECORD///
 	public Record searchForRecord() {
 		int idFromUser = view.getIdFromUser();
 
@@ -104,13 +117,90 @@ public class RecordStoreController {
 	}
 
 
-	
+
+	///DELETE A RECORD///
 	public void deleteRecord(Record record) {
 		model.deleteRecord(record);
 	}
-	
-	
-	
+
+
+
+	///CHECK IF BARGIN BIN / CHARITY ///
+	public static void checkIfOld() {
+		//get 30 days before today
+		Calendar thirtyDaysAgo = new GregorianCalendar();
+		thirtyDaysAgo.add(Calendar.DAY_OF_MONTH, -30);
+		//get one year ago
+		Calendar oneYearAgo = new GregorianCalendar();
+		oneYearAgo.add(Calendar.YEAR, -1);
+
+		//keep track of id in linked list of record to be deleted 
+		LinkedList<Integer> deleteRecordsIds = new LinkedList<Integer>();
+
+		for (Record r : allRecords) {
+			//compare dateAdded to one year ago
+			if (r.getDateAdded().before(oneYearAgo)) {
+				boolean successful;
+				//if older ask user what to do with it
+				int userChoice = view.moveRecordOrCall(r, "Charity");
+
+				//delete either way
+				if (userChoice == 1 || userChoice == 2) {
+					//if consigner takes it, delete from inventory
+					successful = model.deleteRecord(r);
+					if(successful) {
+						//copy linked list position for deleting after loop
+						deleteRecordsIds.add(r.getId());
+					} else {
+						System.out.println("***Delete using main menu.***");
+					}
+				}
+				//compare date added to inventory and 30 days ago, 
+			} else if (r.getDateAdded().before(thirtyDaysAgo)) { 
+				boolean successful;
+				//if older ask user what to do with it
+				int userChoice = view.moveRecordOrCall(r, "Bargin Bin");
+
+				if (userChoice == 1) {
+					//move record to bargin bin and update in inventory
+					successful = model.updateInventoryStatus(r);
+					if(successful) {
+						r.setBarginBin(true);
+					} else {
+						System.out.println("***Update using main menu.***");
+					}
+				} else if (userChoice == 2) {
+					//if consigner takes it, delete from inventory
+					successful = model.deleteRecord(r);
+					if(successful) {
+						//copy linked list position for deleting after loop
+						deleteRecordsIds.add(r.getId());
+					} else {
+						System.out.println("***Delete using main menu.***");
+					}
+				}
+
+
+			}
+		}
+
+
+		//for every stored id of a record that was deleted from DB
+		for (Integer dri : deleteRecordsIds) {
+			//loop through the allRecords for a matching id
+			for (Record r : allRecords) {
+				//if the id's match (id's of deleted records & stored records)
+				if (dri == r.getId()) {
+					//remove from allRecords
+					allRecords.remove(r);
+					break;
+				}
+			}
+		}
+	}
+
+
+
 	///ADD CONSIGNER///
 	public void addConsigner(Consigner consigner) {
 		//call the model to insert data to DB
@@ -127,14 +217,15 @@ public class RecordStoreController {
 			allConsigners.add(consigner);
 			System.out.println(consigner);
 		}
-		
-		
+
+
 	}
-	
-	
+
+
+
+	///SEARCH FOR A CONSIGNER///
 	public Consigner searchForConsigner() {
 		int idFromUser = view.getIdFromUser();
-
 		//search through all records 
 		for (Consigner consigner : allConsigners) {
 			//to find one that matches the user's id entry
@@ -156,6 +247,8 @@ public class RecordStoreController {
 	}
 
 
+
+	///SEARCH FOR A PAYMENT///
 	public Payment searchForPayment() {
 		int idFromUser = view.getIdFromUser();
 
@@ -180,13 +273,9 @@ public class RecordStoreController {
 	}
 
 
-	///SEARCH FOR OLD COPIES///	
-	public Record searchForOldCopies() {
-		return null;
-	}
 
 
-	//add a new record to storage
+	///ADD A NEW RECORD TO STORAGE///
 	public void addToAllRecords(Record r) {
 		allRecords.add(r);
 
@@ -200,6 +289,8 @@ public class RecordStoreController {
 	}
 
 
+
+	//TODO rename setRecordId() - not a setter
 	//setters overridden to keep track of ids
 	//every time an item is created in the DB, 
 	//the id will tick here (as it does in the DB)
@@ -235,14 +326,6 @@ public class RecordStoreController {
 		return allPayments;
 	}
 
-
-
-
-
-	
-
-
-	
 
 
 

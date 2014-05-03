@@ -1,9 +1,5 @@
 package recordStoreAudry;
 
-/*
- * String createConsignersTable = "CREATE TABLE Consigners (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
- + "Name varchar(40), Phone varchar(10), MoneyOwed double)";
- */
 
 public class Consigner {
 	private int id;

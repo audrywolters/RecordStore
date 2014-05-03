@@ -22,16 +22,16 @@ public class RecordStoreModel {
 	ResultSet rs = null;
 	PreparedStatement psInsert = null;
 	private static LinkedList<Statement> allStatements = new LinkedList<Statement>();
-	
 
 
 
 	//constructor
 	public RecordStoreModel(RecordStoreController rsController) {
+		//TODO fix static issue
 		this.controller = rsController;
 	}
 
-	
+
 
 	///CONNECT TO DATABASE///
 	public void createConnection() {
@@ -50,8 +50,7 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 	}
-	
-	
+
 
 
 	///MAKE TABLES///
@@ -103,14 +102,13 @@ public class RecordStoreModel {
 		}
 	}
 
-	
-	
+
 
 	///ADD NEW RECORD TO DB///
 	public boolean addUserRecord(Record record) {
 		//prepare id
 		//controller.setRecordId();
-	
+
 		// prepare variables
 		String title = record.getTitle();
 		String artist = record.getArtist();
@@ -150,15 +148,14 @@ public class RecordStoreModel {
 
 	}
 
-	
-	
+
 
 	///UPDATE SOLD RECORD TO DB///
 	public boolean updateSoldRecord(Record record) {	
 		//prep date for SQL
 		Calendar dateSold = record.getDateSold();
 		java.sql.Date sqlDateSold =  new java.sql.Date(dateSold.getTime().getTime() );
-		
+
 
 		String updateRecord = "UPDATE Records"
 				+ " SET DateSold = '" + sqlDateSold + "', Sold = 'TRUE', PriceSold = " + record.getPriceSold()
@@ -178,34 +175,57 @@ public class RecordStoreModel {
 	}
 
 	
-	
+
+	///UPDATE RECORD STAUTS///
+	public boolean updateInventoryStatus(Record record) {
+		String updateStatus= "UPDATE Records"
+				+ " SET BarginBin = TRUE, Price = 1.00"
+				+ " WHERE Id = " + record.getId();
+
+		try {
+			statement.executeUpdate(updateStatus);
+			System.out.println("Record updated.");
+			return true;
+		} catch (SQLException se) {
+			System.out.println("Error updating record.");
+			//TODO DST
+			se.printStackTrace();
+			return false;
+		}
+	}
+
+
+
 	///DELETE RECORD///
-	public void deleteRecord(Record record) {
+	public boolean deleteRecord(Record record) {
 		String deleteRecord = "DELETE FROM Records "
 				+ "WHERE Id=" + record.getId();
-		
+
 		try {
 			statement.executeUpdate(deleteRecord);
 			System.out.println("Record Deleted");
+			boolean success = true;
+			return success;
 		} catch (SQLException e) {
 			System.out.println("Unable to delete record");
+			boolean success = false;
 			//TODO DST
 			e.printStackTrace();
+			return success;
 		}
-		
+
 	}
-	
-	
-	
-	
+
+
+
 	///ADD NEW CONSIGNER///
 	public boolean addConsigner(Consigner consigner) {
 		//get variables out of consigner object
 		String name = consigner.getName();
 		String phone = consigner.getPhone();		
-		
+
 		String insertConsigner = "INSERT INTO Consigners (Name, Phone) VALUES (?, ?)";
-		
+
 		try {
 			psInsert = connection.prepareStatement(insertConsigner);
 			allStatements.add(psInsert);
@@ -222,29 +242,37 @@ public class RecordStoreModel {
 			return false;
 		}
 
-		
+
 	}
-	
-	
-	
-	
-	
-	
-	
+
+
+
 	///ADD TEST DATA///
 	public void addTestData() { 
-		// /RECORDS///
+		///RECORDS///
 		// test data
-		String[] titles = { "Outside", "Low", "The Fragile", "Head Over Heels" };
-		String[] artists = { "David Bowie", "David Bowie", "Nine Inch Nails", "Cocteau Twins" };
-		int[] consigners = { 1, 1, 2, 3 };
-		Date[] datesAdded = { Date.valueOf("2014-03-10"),
-				Date.valueOf("2014-03-10"), Date.valueOf("2014-03-13"),
-				Date.valueOf("2013-04-02") };
+		String[] titles = { "Outside", "Low", "The Fragile", 
+							"Head Over Heels", "Low", "Low" };
+		
+		String[] artists = { "David Bowie", "David Bowie", "Nine Inch Nails", 
+							 "Cocteau Twins", "David Bowie", "Yung Bundle" };
+		
+		int[] consigners = { 1, 1, 2, 
+							 3, 3, 1 };
+		
+		Date[] datesAdded = { Date.valueOf("2014-04-10"), Date.valueOf("2014-05-02"), Date.valueOf("2013-05-03"), 
+							  Date.valueOf("2014-04-01"), Date.valueOf("2014-05-02"), Date.valueOf("2014-04-30") };
 		// dateSold null
-		Boolean[] solds = { false, false, false, true };
-		Boolean[] barginBins = { false, false, false, false };
-		double[] prices = { 10.00, 10.00, 7.00, 9.00 };
+		
+		Boolean[] solds = { false, false, false, 
+							false, false, false };
+		
+		Boolean[] barginBins = { false, false, true, 
+								 true, false, false };
+		
+		double[] prices = { 10.00, 10.00, 7.00, 
+							9.00, 8.00, 1.01 };
+		
 		// priceSold null
 
 
@@ -277,7 +305,6 @@ public class RecordStoreModel {
 		}
 
 
-
 		///CONSIGNERS///
 		//test data
 		String[] names = { "Jeremiah Johnson", "Tom Lang", "Jill Ranwieler" };
@@ -306,7 +333,6 @@ public class RecordStoreModel {
 			// TODO DST
 			e.printStackTrace();
 		}
-
 
 
 		///PAYMENTS///
@@ -340,16 +366,9 @@ public class RecordStoreModel {
 			e.printStackTrace();
 		}
 	}
-	/*
-	psInsert.setString(1, titles[i]);
-	psInsert.setString(2, artists[i]);
-	psInsert.setInt(3, consigners[i]);
-	psInsert.setDate(4, datesAdded[i]);
-	psInsert.setBoolean(5, solds[i]);
-	psInsert.setBoolean(6, barginBins[i]);
-	psInsert.setDouble(7, prices[i]);
-	*/
-	
+
+
+
 	///GET ALL RECORDS AND STORE THEM///
 	public void requestAllRecords() {
 		//fetch the data
@@ -378,7 +397,7 @@ public class RecordStoreModel {
 
 				Record r = new Record(title, artist, price, consignerId, calAdded);
 				r.setId(id);
-				
+
 				controller.addToAllRecords(r);
 
 			}
@@ -389,8 +408,8 @@ public class RecordStoreModel {
 		}
 	}
 
-	
-	
+
+
 
 	///GET ALL CONSIGNERS AND STORE THEM///
 	public void requestAllConsigners() {
@@ -424,8 +443,8 @@ public class RecordStoreModel {
 	}
 
 
-	
-	
+
+
 	///GET ALL PAYMENTS AND STORE THEM///
 	public void requestAllPayments() {
 		// fetch all data
@@ -456,8 +475,8 @@ public class RecordStoreModel {
 	}
 
 
-	
-	
+
+
 	///SHUT DOWN DATABASE///
 	public void cleanUp() {
 		// close result set
@@ -493,10 +512,6 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 	}
-
-
-
-
 
 
 
