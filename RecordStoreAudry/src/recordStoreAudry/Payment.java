@@ -12,11 +12,11 @@ public class Payment {
 	private Calendar dateMade;
 
 	// constructor
-	public Payment(int d, int rcrdD, int cnsgnrD, boolean tstndng) {
-		this.id = d;
-		this.recordId = rcrdD;
-		this.consignerId = cnsgnrD;
-		this.outstanding = tstndng;
+	public Payment(/*int d, */int recrdId, int consgnrId, boolean outstndng) {
+		//this.id = d;
+		this.recordId = recrdId;
+		this.consignerId = consgnrId;
+		this.outstanding = outstndng;
 	}
 
 	// to string
@@ -76,7 +76,7 @@ public class Payment {
 		this.amountPaid = amountPaid;
 	}
 
-	public boolean isOutstanding() {
+	public boolean getOutstanding() {
 		return outstanding;
 	}
 

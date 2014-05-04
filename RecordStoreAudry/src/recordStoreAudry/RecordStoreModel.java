@@ -122,7 +122,7 @@ public class RecordStoreModel {
 		// prepare statement
 		String newRecordInsert = "INSERT INTO Records"
 				+ "(Title, Artist, DateAdded, Sold, BarginBin, Price)"
-				+ "VALUES" + "(?, ?, ?, ?, ?, ?)";
+				+ "VALUES (?, ?, ?, ?, ?, ?)";
 		try {
 			psInsert = connection.prepareStatement(newRecordInsert);
 			allStatements.add(psInsert);
@@ -148,7 +148,41 @@ public class RecordStoreModel {
 
 	}
 
+	public boolean addPayment(Payment payment) {
+		//prep variables
+		int recId = payment.getRecordId();
+		int consignId = payment.getConsignerId();
+		boolean outstand = payment.getOutstanding();
+		double amountDue = payment.getAmountDue();
+		
+		
+		String createPayment = "INSERT INTO Payments"
+				+ " (RecordId, ConsignerId, Outstanding, AmountDue)"
+				+ " VALUES (?, ?, ?, ?)";
 
+		try {
+			psInsert = connection.prepareStatement(createPayment);
+			allStatements.add(psInsert);
+			
+			psInsert.setInt(1, recId);
+			psInsert.setInt(2, consignId);
+			psInsert.setBoolean(3, outstand);
+			psInsert.setDouble(4, amountDue);
+			psInsert.executeUpdate();
+			
+			System.out.println("Added payment to database.");
+			return true;
+			
+		} catch (SQLException se) {
+			System.out.println("Error adding payment to database");
+			//TODO DST
+			se.printStackTrace();
+			return false;
+		}
+		
+		
+		
+	}
 
 	///UPDATE SOLD RECORD TO DB///
 	public boolean updateSoldRecord(Record record) {	
@@ -173,15 +207,43 @@ public class RecordStoreModel {
 			return false;
 		}
 	}
-
+	
+	
+	///UPDATE PAID FOR PAYMENT///
+	public boolean updatePayment(Payment payment) {
+		//prep date for SQL
+		Calendar dateMade = payment.getDateMade();	
+		java.sql.Date sqlDateMade = new java.sql.Date(dateMade.getTime().getTime());
+		
+		//prep statement
+		String updatePayment = "UPDATE Payments"
+				+ " SET AmountDue = " + payment.getAmountDue() +   
+				", AmountPaid = " + payment.getAmountPaid() +  ", Outstanding = 'FALSE'" + ", DateMade = '" + sqlDateMade  
+				+ "'  WHERE Id = " + payment.getId();
+				
+		//update the DB
+		try {
+			statement.executeUpdate(updatePayment);
+			System.out.println("Record Updated");
+			return true;
+		} catch (SQLException se) {
+			System.out.println("Error updating payment");
+			//TODO DST
+			se.printStackTrace();
+			return false;
+		}
+	}
+	
 	
 
-	///UPDATE RECORD STAUTS///
+	///UPDATE BARGIN BIN STAUTS///
 	public boolean updateInventoryStatus(Record record) {
+		//prep statement
 		String updateStatus= "UPDATE Records"
 				+ " SET BarginBin = TRUE, Price = 1.00"
 				+ " WHERE Id = " + record.getId();
 
+		//update the DB
 		try {
 			statement.executeUpdate(updateStatus);
 			System.out.println("Record updated.");
@@ -264,7 +326,7 @@ public class RecordStoreModel {
 							  Date.valueOf("2014-04-01"), Date.valueOf("2014-05-02"), Date.valueOf("2014-04-30") };
 		// dateSold null
 		
-		Boolean[] solds = { false, false, false, 
+		Boolean[] solds = { true, false, false, 
 							false, false, false };
 		
 		Boolean[] barginBins = { false, false, true, 
@@ -309,11 +371,11 @@ public class RecordStoreModel {
 		//test data
 		String[] names = { "Jeremiah Johnson", "Tom Lang", "Jill Ranwieler" };
 		String[] phones = { "(612)123-4567", "(612)333-4444", "(651)666-7890" };
-		double[] moneyOweds = { 0, 0, 0 };
+		//double[] moneyOweds = { 0, 0, 0 };
 
 		//statements
 		String consignerInsert = "INSERT INTO Consigners"
-				+ "(Name, Phone, MoneyOwed)" + "VALUES" + "(?, ?, ?)";
+				+ "(Name, Phone)" + "VALUES" + "(?, ?)";
 		try {
 			psInsert = connection.prepareStatement(consignerInsert);
 			allStatements.add(psInsert);
@@ -321,7 +383,6 @@ public class RecordStoreModel {
 			for (int i = 0; i < names.length; i++) {
 				psInsert.setString(1, names[i]);
 				psInsert.setString(2, phones[i]);
-				psInsert.setDouble(3, moneyOweds[i]);
 				psInsert.executeUpdate();
 				//update id for controller
 				controller.setConsignerId();
@@ -337,9 +398,9 @@ public class RecordStoreModel {
 
 		///PAYMENTS///
 		//data
-		int[] recordIds = { 1, 3 };
-		int[] consignerIds = { 1, 2 };
-		boolean[] outstandings = { false, false };
+		int[] recordIds = { 1, 2, 6, 3, 4, 5 };
+		int[] consignerIds = { 1, 1, 1, 2, 3, 3 };
+		boolean[] outstandings = { true, false, false, false, false, false };
 
 		// statements
 		String paymentInsert = "INSERT INTO Payments"
@@ -353,6 +414,7 @@ public class RecordStoreModel {
 			for (int i = 0; i < recordIds.length; i++) {
 				psInsert.setInt(1, recordIds[i]);
 				psInsert.setInt(2, consignerIds[i]);
+				//psInsert.setDouble(3, amountDue[i]);
 				psInsert.setBoolean(3, outstandings[i]);
 				psInsert.executeUpdate();
 				//update id for controller
@@ -464,7 +526,8 @@ public class RecordStoreModel {
 				int recordId = rs.getInt("RecordId");
 				int consignerId = rs.getInt("ConsignerId");
 				boolean outstanding = rs.getBoolean("Outstanding");
-				Payment p = new Payment(id, recordId, consignerId, outstanding);
+				Payment p = new Payment(recordId, consignerId, outstanding);
+				p.setId(id);
 				controller.addToAllPayments(p);
 			}
 		} catch (SQLException se) {
@@ -512,6 +575,13 @@ public class RecordStoreModel {
 			se.printStackTrace();
 		}
 	}
+
+
+
+	
+
+
+	
 
 
 

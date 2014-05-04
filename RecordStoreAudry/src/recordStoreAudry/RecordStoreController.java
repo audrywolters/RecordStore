@@ -66,27 +66,69 @@ public class RecordStoreController {
 		}
 	}
 
+
+
 	///CHECK IF THERE ARE TOO MANY COPIES OF RECORD///
 	public boolean tooManyCopies(String title, String artist) {
+		int copies = 0;
 
-		return true;
+		//search all records
+		for (Record r : allRecords) {
+			//compare new title & artist entry to what's in inventory
+			if (title.equalsIgnoreCase(r.getTitle()) && 
+					(artist.equalsIgnoreCase(r.getArtist()))) {
+				//if they are the same tick copies
+				copies++;
+			}
+		}
+
+		if (copies >= 2) {
+			return true;
+		} else {
+			return false;
+		}
+
 
 	}
 
+	
+	///PRINT ALL RECORDS///
+	public void printAllRecords() {
+		for (Record r : allRecords) {
+			System.out.println(r);
+		}
+	}
+
+
 	///UPDATE SOLD RECORD///
 	public void requestUpdateSoldRecord() {
+		//prep record
 		Record record = searchForRecord();
 		double priceSold = view.getPriceFromUser();
 		record.setSold(true);
 		record.setPriceSold(priceSold);
-		//prep data
-
 		Calendar now = GregorianCalendar.getInstance();
 		//don't parse here, parse in sql
-		//java.sql.Date dateSold = new java.sql.Date(today.getTime());
 		record.setDateSold(now);
+
+		//prep payment
+		setPaymentId();
+		int payId = getPaymentId();
+		int recId = record.getId();
+		int consignId = record.getConsignerId();
+		double amountDue = record.getPriceSold() * .5 ;
+		boolean outstanding = true;
+		Payment payment = new Payment(recId, consignId, outstanding);
+		payment.setId(payId);
+		payment.setAmountDue(amountDue);
+
 		//call database to update
 		model.updateSoldRecord(record);
+		boolean successful = model.addPayment(payment);
+		if (successful) {
+			allPayments.add(payment);
+		}
+
 
 	}
 
@@ -96,6 +138,7 @@ public class RecordStoreController {
 	public Record searchForRecord() {
 		int idFromUser = view.getIdFromUser();
 
+		System.out.println("OUTSTANDING PAYMENTS");
 		//search through all records 
 		for (Record record : allRecords) {
 			//to find one that matches the user's id entry
@@ -200,6 +243,14 @@ public class RecordStoreController {
 	}
 
 
+	///PRINT ALL CONSIGNERS///
+	public void printAllConsigners() {
+		for (Consigner c : allConsigners) {
+			System.out.println(c);
+		}
+	}
+
+
 
 	///ADD CONSIGNER///
 	public void addConsigner(Consigner consigner) {
@@ -248,6 +299,35 @@ public class RecordStoreController {
 
 
 
+	///CALC MONEY OWED FOR CONSIGNER///
+	public double calcMoneyOwed(Consigner c) {
+		double totalOwed = 0;
+
+		//loop through payments
+		for (Payment p : allPayments) {
+			//if ids match
+			if (c.getId() == p.getConsignerId()) {
+				//check if money is owed
+				if (p.getOutstanding() == true) {
+					totalOwed = totalOwed + p.getAmountDue();
+				}
+			}
+		}
+
+		if (totalOwed >= 0) {
+			return totalOwed;
+		} else {
+			return -3.33;
+		}
+
+
+
+
+	}
+
+
+
+
 	///SEARCH FOR A PAYMENT///
 	public Payment searchForPayment() {
 		int idFromUser = view.getIdFromUser();
@@ -273,7 +353,39 @@ public class RecordStoreController {
 	}
 
 
+	///VIEW OUTSTANDING PAYMENTS///
+	public void findOutsandingPayments() {
+		for (Payment p : allPayments) {		
+			if (p.getOutstanding() == true) {
+				System.out.println(p);
+			}
+		}
+	}
 
+
+	///UPDATE PAYMENT///
+	public void updatePaymentCont(Payment payment) {
+		//prep variables
+		Calendar dateMade = new GregorianCalendar();
+		double amountDue = 0;
+		double amountPaid = payment.getAmountDue();
+		boolean outstanding = false;
+		//set varaibles
+		payment.setDateMade(dateMade);
+		payment.setAmountDue(amountDue);
+		payment.setAmountPaid(amountPaid);
+		payment.setOutstanding(outstanding);
+
+		//call the DB to update itself
+		boolean successful = model.updatePayment(payment);
+		//let user know status of update
+		if(successful) {
+			allPayments.add(payment);
+		} else {
+			System.out.println ("***Update payment through Main Menu***");
+		}
+
+	}
 
 	///ADD A NEW RECORD TO STORAGE///
 	public void addToAllRecords(Record r) {
@@ -325,6 +437,8 @@ public class RecordStoreController {
 	public LinkedList<Payment> getAllPayments() {
 		return allPayments;
 	}
+
+
 
 
 

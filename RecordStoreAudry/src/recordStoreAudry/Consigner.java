@@ -5,7 +5,7 @@ public class Consigner {
 	private int id;
 	private String name;
 	private String phone;
-	private double moneyOwed;
+	//private double moneyOwed;
 
 	// constructor
 	public Consigner(String nm, String phn) {
@@ -16,8 +16,7 @@ public class Consigner {
 
 	// to string
 	public String toString() {
-		return "Consigner [id=" + id + ", name=" + name + ", phone=" + phone
-				+ ", moneyOwed=" + moneyOwed + "]";
+		return "Consigner [id=" + id + ", name=" + name + ", phone=" + phone + "]";
 	}
 
 	// get and set
@@ -45,6 +44,7 @@ public class Consigner {
 		this.phone = phone;
 	}
 
+	/*
 	public double getMoneyOwed() {
 		return moneyOwed;
 	}
@@ -52,5 +52,6 @@ public class Consigner {
 	public void setMoneyOwed(double moneyOwed) {
 		this.moneyOwed = moneyOwed;
 	}
+	*/
 
 }

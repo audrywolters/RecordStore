@@ -5,12 +5,15 @@ import java.util.GregorianCalendar;
 import java.util.Scanner;
 
 public class RecordStoreView {
+
 	private RecordStoreController controller;
 	private Scanner sInt = new Scanner(System.in);
 	private Scanner sStrng = new Scanner(System.in);
 	private Scanner sDbl = new Scanner(System.in);
 
 
+	
+	
 	// constructor
 	RecordStoreView(RecordStoreController contrllr) {
 		controller = contrllr;
@@ -26,15 +29,15 @@ public class RecordStoreView {
 					+ "RECORDS \n"
 					+ "1. Add a new Record \n"
 					+ "2. Sell a Record \n"
-					+ "3. View/Delete a Record \n" 
+					+ "3. View all Records \n"
+					+ "4. Delete a Record \n" 
 					+ "CONSIGNERS \n"
-					+ "4. Add a new Consigner \n" 
-					+ "5. Pay a Consigner \n"
-					+ "6. View/Delete a Consigner \n" 
+					+ "5. Add a new Consigner \n" 
+					+ "6. Pay a Consigner \n"
+					+ "7. View all Consigners \n" 
 					+ "PAYMENTS \n"
-					+ "7. Make a payment \n"
-					+ "8. View outstanding payments \n"
-					+ "9. View past payments \n"
+					+ "8. Make a payment \n"
+					+ "9. View outstanding payments \n"
 					+ "QUIT \n"
 					+ "0. Quit Record Store Manager \n"
 					+ "-----------------------------");
@@ -66,6 +69,10 @@ public class RecordStoreView {
 			break;
 
 		} case 3: {
+			controller.printAllRecords();
+			break;
+			
+		} case 4: {
 			Record record = controller.searchForRecord();
 			int userChoiceEdit = editOrDeleteMenu();
 			if (userChoiceEdit == 1) {
@@ -73,9 +80,41 @@ public class RecordStoreView {
 			} 
 			break;
 
-		} case 4: {
+		} case 5: {
 			Consigner consigner = addConsigner();
 			controller.addConsigner(consigner);
+			break;
+			
+		} case 6: {
+			Consigner c = controller.searchForConsigner();
+			String consUserChoice = isThisYourConsigner(c);
+			if (consUserChoice.equalsIgnoreCase("y")) {
+				printConsigner(c);
+			}
+			
+			break;
+			
+		} case 7: {
+			controller.printAllConsigners();
+			break;
+			
+		} case 8: {
+			Payment payment = controller.searchForPayment();
+			if (payment != null) {
+				int payUserChoice = payConsigner(payment);
+				if (payUserChoice == 1) {
+					controller.updatePaymentCont(payment);
+				} else {
+					//do nothing
+				}
+				//TODO add user val
+			}
+			break;
+			
+		} case 9: {
+			controller.findOutsandingPayments();
+			break;
+			
 		}
 
 
@@ -139,6 +178,19 @@ public class RecordStoreView {
 		return -1;
 	}
 
+	
+	
+	///MAKE PAYMENT///
+	public int payConsigner(Payment payment) {
+		System.out.println(payment.getAmountDue() + " is owed to the consigner.");
+		System.out.println("1. Payment Made. \n"
+				+ "2. Main Menu");
+		int userChoice = sInt.nextInt();
+		return userChoice;
+		
+		//TODO add user validation
+	}
+	
 
 
 	public Consigner addConsigner() {
@@ -176,16 +228,25 @@ public class RecordStoreView {
 		return userChoice;
 		//TOOD add validation
 	}
-
+	//consigner
 	public String isThisYourConsigner(Consigner consigner) {
-		return null;
-	}
+		System.out.println(consigner);
+		System.out.println("Is this the consigner you were looking for? [y/n]");
+		String userChoice = sStrng.nextLine();
+		return userChoice;
+		//TOOD add validation
 
+	}
+	//payment
 	public String isThisYourPayment(Payment payment) {
-		return null;
+		System.out.println(payment);
+		System.out.println("Is this the payment you were looking for? [y/n]");
+		String userChoice = sStrng.nextLine();
+		return userChoice;
+		//TOOD add validation	
 	}
 
-	//delte or ignore
+	//delete or ignore record
 	private int editOrDeleteMenu() {
 		System.out.println("1. Delete");
 		System.out.println("2. Main Menu");
@@ -204,9 +265,13 @@ public class RecordStoreView {
 		//TODO add Val
 	}
 
+	
 
-
-
+	private void printConsigner(Consigner c) {
+		double moneyOwed = controller.calcMoneyOwed(c);
+		System.out.println("ID: " + c.getId() + "Name : " + c.getName() + " Phone: " + c.getPhone() + " Money Owed : " + moneyOwed);
+		
+	}
 
 
 

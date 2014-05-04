@@ -48,11 +48,11 @@ public class Record {
 			//print date sold
 			 formatDateSold = sdf.format(dateSold.getTime());
 		}
-		return "Record [id=" + id + ", title=" + title + ", artist=" + artist
-				+ ", consignerId=" + consignerId + ", dateAdded=" + formatDateAdded
-				+ ", dateSold=" + formatDateSold + ", price=" + price
-				+ ", priceSold=" + priceSold + ", barginBin=" + barginBin
-				+ ", sold=" + sold + "]";
+		return  id + ". " + title + ", " + artist
+				+ ", Consigner #" + consignerId + ", Added to Inventory on " + formatDateAdded
+				+ ", Sold on " + formatDateSold + ", Price $" + price
+				+ ", Sold for $" + priceSold + ", In Bargin Bin" + barginBin
+				+ ", Has been sold: " + sold + "]";
 	}
 
 	public void setId(int id) {
