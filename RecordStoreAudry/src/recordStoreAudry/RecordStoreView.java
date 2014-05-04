@@ -2,6 +2,8 @@ package recordStoreAudry;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.InputMismatchException;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 public class RecordStoreView {
@@ -12,8 +14,7 @@ public class RecordStoreView {
 	private Scanner sDbl = new Scanner(System.in);
 
 
-	
-	
+
 	// constructor
 	RecordStoreView(RecordStoreController contrllr) {
 		controller = contrllr;
@@ -23,7 +24,7 @@ public class RecordStoreView {
 
 	// display the menu and get the choice #
 	public void runMenu() {
-		System.out.println("\nWelcome to Record Store Manager.");
+
 		while (true) {
 			System.out.println("-----------------------------\n"
 					+ "RECORDS \n"
@@ -33,7 +34,7 @@ public class RecordStoreView {
 					+ "4. Delete a Record \n" 
 					+ "CONSIGNERS \n"
 					+ "5. Add a new Consigner \n" 
-					+ "6. Pay a Consigner \n"
+					+ "6. View details about a Consigner \n"
 					+ "7. View all Consigners \n" 
 					+ "PAYMENTS \n"
 					+ "8. Make a payment \n"
@@ -41,15 +42,32 @@ public class RecordStoreView {
 					+ "QUIT \n"
 					+ "0. Quit Record Store Manager \n"
 					+ "-----------------------------");
-			int userChoice = sInt.nextInt();
 
-			if (userChoice > 0) {
-				runTask(userChoice);
-			} else {
-				break;
-			}
+
+			int userChoice = -1;
+
+			try {
+				Scanner sMenu = new Scanner(System.in);
+				userChoice = sMenu.nextInt();
+
+				if (userChoice > 0 || userChoice < 10) {
+					runTask(userChoice);
+				} else if (userChoice == 0) {
+					break;
+					//TODO cannot figure out how to quit!
+					//try/catch?
+				} else {
+					System.out.println("Please enter a number*** [0 - 9]");
+				}
+
+
+			} catch (InputMismatchException e) {
+				System.out.println("Please enter a number [0 - 9]");
+
+			} 
 		}
 	}
+
 
 
 
@@ -65,13 +83,13 @@ public class RecordStoreView {
 			break;
 
 		} case 2: {
-			controller.requestUpdateSoldRecord();
+			controller.sellRecord();
 			break;
 
 		} case 3: {
 			controller.printAllRecords();
 			break;
-			
+
 		} case 4: {
 			Record record = controller.searchForRecord();
 			int userChoiceEdit = editOrDeleteMenu();
@@ -84,20 +102,20 @@ public class RecordStoreView {
 			Consigner consigner = addConsigner();
 			controller.addConsigner(consigner);
 			break;
-			
+
 		} case 6: {
 			Consigner c = controller.searchForConsigner();
-			String consUserChoice = isThisYourConsigner(c);
-			if (consUserChoice.equalsIgnoreCase("y")) {
-				printConsigner(c);
+			//String consUserChoice = isThisYourConsigner(c);
+			if (c != null) {
+				printDetailedConsigner(c);
 			}
-			
+
 			break;
-			
+
 		} case 7: {
 			controller.printAllConsigners();
 			break;
-			
+
 		} case 8: {
 			Payment payment = controller.searchForPayment();
 			if (payment != null) {
@@ -107,21 +125,19 @@ public class RecordStoreView {
 				} else {
 					//do nothing
 				}
-				//TODO add user val
 			}
 			break;
-			
+
 		} case 9: {
 			controller.findOutsandingPayments();
 			break;
-			
+
 		}
 
 
 
 		} 
 	}
-
 
 
 	//menu and view for adding a record to the database
@@ -135,18 +151,16 @@ public class RecordStoreView {
 		//check if too many copies
 		boolean tooMany = controller.tooManyCopies(title, artist);
 
-		//
+		
 		if(tooMany) {
 			System.out.println("Sorry, there are too many copies of " + title);
 			runMenu();
 		} else {
 			System.out.println("Enter the price of the record:");
 			double price = sDbl.nextDouble();
-			System.out.println("Enter the Id of the Consigner:");
-			int consignerId = sInt.nextInt();
-			Calendar dateAdded = new GregorianCalendar();
 
-			//TODO add validation
+			int consignerId = getIdFromUser("Consigner");
+			Calendar dateAdded = new GregorianCalendar();
 
 			//create record
 			Record record = new Record(title, artist, price, consignerId, dateAdded);
@@ -159,38 +173,91 @@ public class RecordStoreView {
 
 	///ASK USER TO MOVE TO BARGIN BIN///
 	public int moveRecordOrCall(Record oldRecord, String area) {
-		if(oldRecord != null && area.equals("Bargin Bin")) {
-			System.out.println("\n***" + oldRecord.getTitle() + " has been in inventory for more than 30 days.***\n"
-					+ "1. Move to Bargin Bin \n"
-					+ "2. Call Consigner \n");
+		boolean valid = false;
+		int userChoice = 0;
 
-			int userChoice = sInt.nextInt();
-			return userChoice;
-		} else if (oldRecord != null && area.equals("Charity")) {
-			System.out.println("\n***" + oldRecord.getTitle() + " has been in Bargin Bin for more than 1 year.***\n"
-					+ "1. Donate to Charity \n"
-					+ "2. Call Consigner \n");
+		//while userChoice invalid, loop
+		while(!valid) {
+			if(oldRecord != null && area.equals("Bargin Bin")) {
+				System.out.println("\n***" + oldRecord.getTitle() + " has been in inventory for more than 30 days.***\n"
+						+ "1. Move to Bargin Bin \n"
+						+ "2. Return to Consinger \n");
 
-			int userChoice = sInt.nextInt();
-			return userChoice;
+
+				try {
+					Scanner sMenu = new Scanner(System.in);
+					userChoice = sMenu.nextInt();
+					if (userChoice < 1 || userChoice > 2) {
+						System.out.println("Please enter a number [1 or 2]");
+						valid = false;
+					} else {
+						valid = true;
+					}
+				} catch (InputMismatchException e) {
+					System.out.println("Please enter a number [1 or 2]");
+					valid = false;
+					continue;
+				}
+
+
+			} else if (oldRecord != null && area.equals("Charity")) {
+				System.out.println("\n***" + oldRecord.getTitle() + " has been in Bargin Bin for more than 1 year.***\n"
+						+ "1. Donate to Charity \n"
+						+ "2. Return to Consinger \n");
+
+				try {
+					Scanner sMenu2 = new Scanner(System.in);
+					userChoice = sMenu2.nextInt();
+					if (userChoice < 1 || userChoice > 2) {
+						System.out.println("Please enter a number [1 or 2]");
+						valid = false;
+					} else {
+						valid = true;
+					}
+				} catch (InputMismatchException e) {
+					System.out.println("Please enter a number [1 or 2]");
+					valid = false;
+					continue;
+				}
+
+				
+			}
+
+			
 		}
-		//TODO add validation
-		return -1;
+		return userChoice;
 	}
 
-	
-	
+
+
+
 	///MAKE PAYMENT///
 	public int payConsigner(Payment payment) {
 		System.out.println(payment.getAmountDue() + " is owed to the consigner.");
-		System.out.println("1. Payment Made. \n"
-				+ "2. Main Menu");
-		int userChoice = sInt.nextInt();
+		boolean valid = false;
+		int userChoice = 0;
+
+		//while userChoice invalid, loop
+		while(!valid) {
+			System.out.println("1. Make Payment");
+			System.out.println("2. Main Menu");
+			try {
+				Scanner sMenu = new Scanner(System.in);
+				userChoice = sMenu.nextInt();
+				if (userChoice < 1 || userChoice > 2) {
+					System.out.println("Please enter 1 or 2.");
+					valid = false;
+				} else {
+					valid = true;
+				}
+			} catch (InputMismatchException e) {
+				System.out.println("Please enter a number.");
+				continue;
+			}
+		}
 		return userChoice;
-		
-		//TODO add user validation
 	}
-	
+
 
 
 	public Consigner addConsigner() {
@@ -200,7 +267,6 @@ public class RecordStoreView {
 		System.out.println("Enter the phone number of the consigner [(XXX)XXX-XXXX]");
 		String phone = sStrng.nextLine();
 
-		//TODO add validation
 
 		//create new consigner
 		Consigner consigner = new Consigner(name, phone);
@@ -211,18 +277,28 @@ public class RecordStoreView {
 
 
 	//get id from user
-	public int getIdFromUser() {
-		System.out.println("Enter the Id of the item.");
-		int idFromUser = sInt.nextInt();
+	public int getIdFromUser(String item) {
+		boolean valid = false;
+		int idFromUser = 0;
+		while(valid == false) {
+			System.out.println("Enter the Id of the " + item);
+			try {
+				Scanner sMenu = new Scanner(System.in);
+				idFromUser = sMenu.nextInt();
+				valid = true;
+			} catch (InputMismatchException e) {
+				System.out.println("Please enter a number.");
+				continue;
+			}
+		}
 		return idFromUser;
-		//TODO add validation
 	}
 
 
 
 	//confirm if user wants this record
-	public String isThisYourRecord(Record r) {
-		System.out.println(r);
+	public String isThisYourRecord(Record record) {
+		System.out.println(record.getTitle());
 		System.out.println("Is this the record you were looking for? [y/n]");
 		String userChoice = sStrng.nextLine();
 		return userChoice;
@@ -230,47 +306,83 @@ public class RecordStoreView {
 	}
 	//consigner
 	public String isThisYourConsigner(Consigner consigner) {
-		System.out.println(consigner);
+		System.out.println(consigner.getName());
 		System.out.println("Is this the consigner you were looking for? [y/n]");
-		String userChoice = sStrng.nextLine();
+		String userChoice = validateString();
 		return userChoice;
 		//TOOD add validation
 
 	}
 	//payment
 	public String isThisYourPayment(Payment payment) {
-		System.out.println(payment);
+		System.out.println("Consigner ID: " + payment.getConsignerId() + "Amount Due: " + payment.getAmountDue());
 		System.out.println("Is this the payment you were looking for? [y/n]");
-		String userChoice = sStrng.nextLine();
+		String userChoice = validateString();
 		return userChoice;
 		//TOOD add validation	
 	}
 
 	//delete or ignore record
 	private int editOrDeleteMenu() {
-		System.out.println("1. Delete");
-		System.out.println("2. Main Menu");
-		int userChoice = sInt.nextInt();
+
+		boolean valid = false;
+		int userChoice = 0;
+
+		//while userChoice invalid, loop
+		while(!valid) {
+			System.out.println("1. Delete");
+			System.out.println("2. Main Menu");
+			try {
+				Scanner sMenu = new Scanner(System.in);
+				userChoice = sMenu.nextInt();
+				if (userChoice < 1 || userChoice > 2) {
+					System.out.println("Please enter 1 or 2.");
+					valid = false;
+				} else {
+					valid = true;
+				}
+			} catch (InputMismatchException e) {
+				System.out.println("Please enter a number.");
+				continue;
+			}
+		}
 		return userChoice;
-		//TODO add Val
 
 	}
 
 
-	//get selling price from user
-	public double getPriceFromUser() {
-		System.out.println("How much is this record selling for?");
-		double priceSold = sDbl.nextDouble();
-		return priceSold;
-		//TODO add Val
+
+	private void printDetailedConsigner(Consigner consigner) {
+		double moneyOwed = controller.calcMoneyOwed(consigner);
+		LinkedList<Record> consignerRecords = controller.findConsingerRecords(consigner);
+		System.out.println(consigner);
+		System.out.println("Total money owed: " + moneyOwed);
+		System.out.println("Records owned by " + consigner.getName());
+		for (Record record : consignerRecords) {
+			System.out.println(record);
+		}
+
 	}
 
-	
-
-	private void printConsigner(Consigner c) {
-		double moneyOwed = controller.calcMoneyOwed(c);
-		System.out.println("ID: " + c.getId() + "Name : " + c.getName() + " Phone: " + c.getPhone() + " Money Owed : " + moneyOwed);
+	private String validateString() {
 		
+		boolean valid = false;
+		String userChoice = null;
+		while (!valid) {
+		
+			Scanner sMenu = new Scanner(System.in);
+			
+			userChoice = sMenu.nextLine();
+			if (userChoice.equalsIgnoreCase("y") || userChoice.equalsIgnoreCase("n")) {
+				valid = true;
+			} else {
+				System.out.println("Please enter [ y / n ]");
+				valid = false;
+				continue;
+			}
+		}
+	
+		return userChoice;
 	}
 
 

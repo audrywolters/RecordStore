@@ -8,7 +8,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 public class RecordStoreModel {
-	private static RecordStoreController controller;
+	private RecordStoreController controller;
 	// connect to database
 	private static String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 	private static String protocol = "jdbc:derby:";
@@ -27,7 +27,6 @@ public class RecordStoreModel {
 
 	//constructor
 	public RecordStoreModel(RecordStoreController rsController) {
-		//TODO fix static issue
 		this.controller = rsController;
 	}
 
@@ -41,13 +40,11 @@ public class RecordStoreModel {
 					+ ";create=true", USER, PASS);
 			statement = connection.createStatement();
 			allStatements.add(statement);
+
 		} catch (ClassNotFoundException e) {
 			System.out.println("Could not connect to the Database.");
-			// TODO delete stack trace
-			e.printStackTrace();
 		} catch (SQLException se) {
-			// TODO delete stack trace
-			se.printStackTrace();
+			System.out.println("Could not connect to the Database.");
 		}
 	}
 
@@ -91,12 +88,9 @@ public class RecordStoreModel {
 					statement.executeUpdate(createRecordsTable);
 					statement.executeUpdate(createConsignersTable);
 					statement.executeUpdate(createPaymentsTable);
-					System.out
-					.println("Tables already exist. Dropped and recreated.");
+
 				} catch (SQLException e) {
 					System.out.println("Something went wrong while creating tables.");
-					//TODO delete stackTrace
-					e.printStackTrace();
 				}
 			} 
 		}
@@ -175,8 +169,6 @@ public class RecordStoreModel {
 			
 		} catch (SQLException se) {
 			System.out.println("Error adding payment to database");
-			//TODO DST
-			se.printStackTrace();
 			return false;
 		}
 		
@@ -188,7 +180,8 @@ public class RecordStoreModel {
 	public boolean updateSoldRecord(Record record) {	
 		//prep date for SQL
 		Calendar dateSold = record.getDateSold();
-		java.sql.Date sqlDateSold =  new java.sql.Date(dateSold.getTime().getTime() );
+		//convert to sql format
+		java.sql.Date sqlDateSold =  new java.sql.Date(dateSold.getTime().getTime());
 
 
 		String updateRecord = "UPDATE Records"
@@ -202,8 +195,6 @@ public class RecordStoreModel {
 			return true;
 		} catch (SQLException e) {
 			System.out.println("Unable to update record.");
-			// TODO delete stack trace
-			e.printStackTrace();
 			return false;
 		}
 	}
@@ -228,8 +219,6 @@ public class RecordStoreModel {
 			return true;
 		} catch (SQLException se) {
 			System.out.println("Error updating payment");
-			//TODO DST
-			se.printStackTrace();
 			return false;
 		}
 	}
@@ -250,8 +239,6 @@ public class RecordStoreModel {
 			return true;
 		} catch (SQLException se) {
 			System.out.println("Error updating record.");
-			//TODO DST
-			se.printStackTrace();
 			return false;
 		}
 	}
@@ -266,14 +253,10 @@ public class RecordStoreModel {
 		try {
 			statement.executeUpdate(deleteRecord);
 			System.out.println("Record Deleted");
-			boolean success = true;
-			return success;
+			return true;
 		} catch (SQLException e) {
 			System.out.println("Unable to delete record");
-			boolean success = false;
-			//TODO DST
-			e.printStackTrace();
-			return success;
+			return false;
 		}
 
 	}
@@ -299,8 +282,6 @@ public class RecordStoreModel {
 			return true;
 		} catch (SQLException e) {
 			System.out.println("Unable to add consigner to database");
-			// TODO DST
-			e.printStackTrace();
 			return false;
 		}
 
@@ -320,7 +301,7 @@ public class RecordStoreModel {
 							 "Cocteau Twins", "David Bowie", "Yung Bundle" };
 		
 		int[] consigners = { 1, 1, 2, 
-							 3, 3, 1 };
+							 3, 2, 1 };
 		
 		Date[] datesAdded = { Date.valueOf("2014-04-10"), Date.valueOf("2014-05-02"), Date.valueOf("2013-05-03"), 
 							  Date.valueOf("2014-04-01"), Date.valueOf("2014-05-02"), Date.valueOf("2014-04-30") };
@@ -356,14 +337,12 @@ public class RecordStoreModel {
 				psInsert.setDouble(7, prices[i]);
 				psInsert.executeUpdate();
 				//update id for controller
-				controller.setRecordId();
+				controller.generateRecordId();
 			}
-			System.out.println("Added records to database");
+			
 
 		} catch (SQLException e) {
 			System.out.println("Error creating test data.");
-			//TODO delete ST
-			e.printStackTrace();
 		}
 
 
@@ -385,14 +364,12 @@ public class RecordStoreModel {
 				psInsert.setString(2, phones[i]);
 				psInsert.executeUpdate();
 				//update id for controller
-				controller.setConsignerId();
+				controller.generateConsignerId();
 			}
-			System.out.println("Added consigners to database.");
+			
 
 		} catch (SQLException e) {
 			System.out.println("Error creating test data.");
-			// TODO DST
-			e.printStackTrace();
 		}
 
 
@@ -418,14 +395,12 @@ public class RecordStoreModel {
 				psInsert.setBoolean(3, outstandings[i]);
 				psInsert.executeUpdate();
 				//update id for controller
-				controller.setPaymentId();
+				controller.generatePaymentId();
 			}
-			System.out.println("Added payments to the database");
+			
 
 		} catch (SQLException e) {
 			System.out.println("Error creating test data.");
-			// TODO DST
-			e.printStackTrace();
 		}
 	}
 
@@ -439,8 +414,6 @@ public class RecordStoreModel {
 			rs = statement.executeQuery(fetchAllRecords);
 		} catch (SQLException se) {
 			System.out.println("Error fetching all records.");
-			// TODO delete stack trace
-			se.printStackTrace();
 		}
 
 		//put data into object and then linked list
@@ -465,8 +438,7 @@ public class RecordStoreModel {
 			}
 		} catch (SQLException se) {
 			System.out.println("Error reading record data.");
-			// TODO delete stack trace
-			se.printStackTrace();
+
 		}
 	}
 
@@ -481,8 +453,6 @@ public class RecordStoreModel {
 			rs = statement.executeQuery(fetchAllConsigners);
 		} catch (SQLException se) {
 			System.out.println("Error fetching Consigners");
-			// TODO delete stack trace
-			se.printStackTrace();
 		}
 
 		// store data
@@ -499,8 +469,7 @@ public class RecordStoreModel {
 			}
 		} catch (SQLException se) {
 			System.out.println("Error reading consigner data");
-			// TODO delete stack trace
-			se.printStackTrace();
+
 		}
 	}
 
@@ -515,8 +484,7 @@ public class RecordStoreModel {
 			rs = statement.executeQuery(fetchAllPayments);
 		} catch (SQLException se) {
 			System.out.println("Error fetching Payments");
-			// TODO delete stack trace
-			se.printStackTrace();
+
 		}
 
 		// store data
@@ -532,8 +500,7 @@ public class RecordStoreModel {
 			}
 		} catch (SQLException se) {
 			System.out.println("Error reading payment data");
-			// TODO delete stack trace
-			se.printStackTrace();
+
 		}
 	}
 
@@ -546,10 +513,10 @@ public class RecordStoreModel {
 		try {
 			if (rs != null) {
 				rs.close();
-				System.out.println("Closed the Result Set");
+				//System.out.println("Closed the Result Set");
 			}
 		} catch (SQLException se) {
-			se.printStackTrace();
+			System.out.println("Couldn't disconnect from database!");
 		}
 
 		// close statements
@@ -557,10 +524,9 @@ public class RecordStoreModel {
 			if (s != null) {
 				try {
 					s.close();
-					System.out.println("Closed Statement.");
 				} catch (SQLException se) {
-					System.out.println("Couldn't close statement!");
-					se.printStackTrace();
+					System.out.println("Couldn't disconnect from database!");
+					//se.printStackTrace();
 				}
 			}
 		}
@@ -569,10 +535,11 @@ public class RecordStoreModel {
 		try {
 			if (connection != null) {
 				connection.close();
-				System.out.println("Disconnected from database.");
+				//System.out.println("Disconnected from database.");
+				System.out.println("Goodbye.");
 			}
 		} catch (SQLException se) {
-			se.printStackTrace();
+			System.out.println("Couldn't disconnect from database!");
 		}
 	}
 

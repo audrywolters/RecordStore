@@ -37,6 +37,8 @@ public class RecordStoreController {
 		model.requestAllPayments();
 
 		//check if records need to be moved
+		System.out.println("Welcome to Record Store Manager.");
+		System.out.println("\nNow Searching for Old Inventory.");
 		checkIfOld();
 
 
@@ -58,8 +60,8 @@ public class RecordStoreController {
 		//if the record was added, update in allRecords
 		if(successful) {
 			allRecords.add(record);
-			setRecordId();
-			int tempId = getRecordId();
+			//tick the id
+			int tempId = generateRecordId();
 			record.setId(tempId);
 			//debug
 			System.out.println("New Id: " + tempId);
@@ -91,7 +93,7 @@ public class RecordStoreController {
 
 	}
 
-	
+
 	///PRINT ALL RECORDS///
 	public void printAllRecords() {
 		for (Record r : allRecords) {
@@ -101,59 +103,67 @@ public class RecordStoreController {
 
 
 	///UPDATE SOLD RECORD///
-	public void requestUpdateSoldRecord() {
-		//prep record
+	public void sellRecord() {
+		//find the right record
 		Record record = searchForRecord();
-		double priceSold = view.getPriceFromUser();
-		record.setSold(true);
-		record.setPriceSold(priceSold);
-		Calendar now = GregorianCalendar.getInstance();
-		//don't parse here, parse in sql
-		record.setDateSold(now);
+		//if found
+		if (record!= null) {
+			//prep the record
+			record.setSold(true);
+			record.setPriceSold(record.getPrice());
+			Calendar now = GregorianCalendar.getInstance();
+			//don't parse here, parse in sql
+			record.setDateSold(now);
 
-		//prep payment
-		setPaymentId();
-		int payId = getPaymentId();
-		int recId = record.getId();
-		int consignId = record.getConsignerId();
-		double amountDue = record.getPriceSold() * .5 ;
-		boolean outstanding = true;
-		Payment payment = new Payment(recId, consignId, outstanding);
-		payment.setId(payId);
-		payment.setAmountDue(amountDue);
+			//prep payment
+			int payId = generatePaymentId();
+			int recId = record.getId();
+			int consignId = record.getConsignerId();
+			//consigner receives half of the total price
+			double amountDue = record.getPrice() * .5 ;
+			boolean outstanding = true;
+			Payment payment = new Payment(recId, consignId, outstanding);
+			payment.setId(payId);
+			payment.setAmountDue(amountDue);
 
-		//call database to update
-		model.updateSoldRecord(record);
-		boolean successful = model.addPayment(payment);
-		if (successful) {
-			allPayments.add(payment);
+			//call database to update recored
+			boolean successful = model.updateSoldRecord(record);
+			if (successful) {
+				//if it was successful add payment to db
+				successful = model.addPayment(payment);
+				if (successful) {
+					//if successful add to linked list
+					allPayments.add(payment);
+				}
+
+			}
 		}
-
-
 	}
 
 
 
 	///SEARCH FOR A RECORD///
 	public Record searchForRecord() {
-		int idFromUser = view.getIdFromUser();
+		String userResponse = "y";
 
-		System.out.println("OUTSTANDING PAYMENTS");
+		int idFromUser = view.getIdFromUser("record");
+
 		//search through all records 
 		for (Record record : allRecords) {
 			//to find one that matches the user's id entry
 			if (idFromUser == record.getId()) {
 				//get confirmation that it's the correct record
-				String userResponse = view.isThisYourRecord(record);
+				userResponse = view.isThisYourRecord(record);
 
 				if (userResponse.equalsIgnoreCase("y")) {
 					return record;
 				} 				
 			}
 
-			if (record.getId() == allRecords.size()) {
+			if (record.getId() == allRecords.size() || userResponse.equalsIgnoreCase("n")) {
 				//if the loop completes and hasn't found anything, print sorry message 
-				System.out.println("Sorry. No matches found.");					
+				System.out.println("Sorry. No matches found.");	
+				break;
 			}
 		}
 		return null;
@@ -170,7 +180,7 @@ public class RecordStoreController {
 
 	///CHECK IF BARGIN BIN / CHARITY ///
 	public static void checkIfOld() {
-		//get 30 days before today
+		//get 30 days ago
 		Calendar thirtyDaysAgo = new GregorianCalendar();
 		thirtyDaysAgo.add(Calendar.DAY_OF_MONTH, -30);
 		//get one year ago
@@ -221,7 +231,7 @@ public class RecordStoreController {
 					} else {
 						System.out.println("***Delete using main menu.***");
 					}
-				}
+				} 
 
 
 			}
@@ -259,9 +269,7 @@ public class RecordStoreController {
 		//if insert was successful
 		if (successful) {
 			//tick the id counter
-			setConsignerId();
-			//get id
-			int id = getConsignerId();
+			int id = generateConsignerId();
 			//set id in the consigner object
 			consigner.setId(id);
 			//add to the LinkedList Storage
@@ -276,7 +284,7 @@ public class RecordStoreController {
 
 	///SEARCH FOR A CONSIGNER///
 	public Consigner searchForConsigner() {
-		int idFromUser = view.getIdFromUser();
+		int idFromUser = view.getIdFromUser("consigner");
 		//search through all records 
 		for (Consigner consigner : allConsigners) {
 			//to find one that matches the user's id entry
@@ -320,9 +328,25 @@ public class RecordStoreController {
 			return -3.33;
 		}
 
+	}
 
 
 
+	///FIND CONSIGNER'S RECORDS///
+	public LinkedList<Record> findConsingerRecords(Consigner c) {
+		//new linked list to hold matching records
+		LinkedList<Record> consignerRecords = new LinkedList<Record>();
+		//get the consigner's id
+		int consignerId = c.getId();
+
+		//search for matching ids in stored records
+		for (Record r : allRecords) {
+			if (consignerId == r.getConsignerId()) {
+				consignerRecords.add(r);
+			}
+		}
+
+		return consignerRecords;
 	}
 
 
@@ -330,7 +354,7 @@ public class RecordStoreController {
 
 	///SEARCH FOR A PAYMENT///
 	public Payment searchForPayment() {
-		int idFromUser = view.getIdFromUser();
+		int idFromUser = view.getIdFromUser("payment");
 
 		//search through all records 
 		for (Payment payment : allPayments) {
@@ -387,6 +411,7 @@ public class RecordStoreController {
 
 	}
 
+	
 	///ADD A NEW RECORD TO STORAGE///
 	public void addToAllRecords(Record r) {
 		allRecords.add(r);
@@ -399,34 +424,27 @@ public class RecordStoreController {
 	public void addToAllPayments(Payment p) {
 		allPayments.add(p);
 	}
+	
 
 
-
-	//TODO rename setRecordId() - not a setter
-	//setters overridden to keep track of ids
-	//every time an item is created in the DB, 
-	//the id will tick here (as it does in the DB)
-	public void setRecordId() {
+	//this keeps track of ids in the java storage - matches the DB id
+	public int generateRecordId() {
 		recordId++;
-	}
-	public int getRecordId() {
 		return recordId;
 	}
 
-	public void setConsignerId() {
+	public int generateConsignerId() {
 		consignerId++;
-	}
-	public int getConsignerId() {
 		return consignerId;
 	}
-
-	public void setPaymentId() {
+	
+	public int generatePaymentId() {
 		paymentId++;
-	}
-	public int getPaymentId() {
 		return paymentId;
 	}
 
+
+	/*
 	//get the storage
 	public LinkedList<Record> getAllRecords() {
 		return allRecords;
@@ -437,7 +455,7 @@ public class RecordStoreController {
 	public LinkedList<Payment> getAllPayments() {
 		return allPayments;
 	}
-
+	*/
 
 
 
