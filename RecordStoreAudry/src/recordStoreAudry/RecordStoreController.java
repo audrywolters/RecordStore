@@ -444,23 +444,5 @@ public class RecordStoreController {
 	}
 
 
-	/*
-	//get the storage
-	public LinkedList<Record> getAllRecords() {
-		return allRecords;
-	}	
-	public LinkedList<Consigner> getAllConsigners() {
-		return allConsigners;
-	}
-	public LinkedList<Payment> getAllPayments() {
-		return allPayments;
-	}
-	*/
-
-
-
-
-
-
 
 }
