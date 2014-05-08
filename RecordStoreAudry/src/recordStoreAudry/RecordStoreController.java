@@ -368,8 +368,9 @@ public class RecordStoreController {
 				} 				
 			}
 
-			if (payment.getId() == allConsigners.size()) {
+			if (payment.getId() == allPayments.size()) {
 				//if the loop completes and hasn't found anything, print sorry message 
+				//TODO fix no payment found loop
 				System.out.println("Sorry. No matches found.");					
 			}
 		}
@@ -409,6 +410,13 @@ public class RecordStoreController {
 			System.out.println ("***Update payment through Main Menu***");
 		}
 
+	}
+	
+	
+	public void printAllPayments() {
+		for (Payment p : allPayments) {
+			System.out.println(p);
+		}
 	}
 
 	

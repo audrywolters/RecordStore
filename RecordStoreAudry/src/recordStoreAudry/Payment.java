@@ -9,6 +9,7 @@ public class Payment {
 	private boolean outstanding;
 	private double amountDue;
 	private double amountPaid;
+	private int paymentMadeBy;
 	private Calendar dateMade;
 
 	// constructor
@@ -84,4 +85,12 @@ public class Payment {
 		this.outstanding = outstanding;
 	}
 
+	public int getPaymentMadeBy() {
+		return paymentMadeBy;
+	}
+
+	public void setPaymentMadeBy(int paymentMadeBy) {
+		this.paymentMadeBy = paymentMadeBy;
+	}
+	
 }

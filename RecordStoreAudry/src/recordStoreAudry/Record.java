@@ -9,52 +9,60 @@ public class Record {
 	private String title;
 	private String artist;
 	private int consignerId;
-	private Calendar dateAdded;
-	private Calendar dateSold;
 	private double price;
-	private double priceSold;
-	private boolean barginBin;
 	private boolean sold;
+	private int checkedInBy;
+	private Calendar dateAdded;
+	private double priceSold;
+	private int soldBy;
+	private Calendar dateSold;
+	private boolean barginBin;
+
 
 	// constructor
-	public Record(String titl, String artst, double pric, int consgnId, Calendar dateAdd) {
+	public Record(String titl, String artst, int consgnId, double pric, int checkdInBy, Calendar dateAdd) {
 		//this.id = id;
 		this.title = titl;
 		this.artist = artst;
-		this.price = pric;
 		this.consignerId = consgnId;
+		this.price = pric;
+		this.sold = false;
+		this.checkedInBy = checkdInBy;
 		this.dateAdded = dateAdd;
 		this.barginBin = false;
-		this.sold = false;
-	}
 
-	// to string
+	}
 	
 
-	// get and set
-	public int getId() {
-		return id;
-	}
-
+	// to string
 	@Override
 	public String toString() {
 		//parse Calendars for printing
 		String formatDateSold;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String formatDateAdded = sdf.format(dateAdded.getTime());
-		if (dateSold == null) {
+		if (sold == false) {
 			 formatDateSold = "Not yet Sold";
+			 
+			 
 		} else {
 			//print date sold
 			 formatDateSold = sdf.format(dateSold.getTime());
 		}
-		return  id + ". " + title + ", " + artist
-				+ ", Consigner #" + consignerId + ", Added to Inventory on " + formatDateAdded
-				+ ", Sold on " + formatDateSold + ", Price $" + price
-				+ ", Sold for $" + priceSold + ", In Bargin Bin" + barginBin
-				+ ", Has been sold: " + sold + "]";
+		return  id + ". " + title + ", " + artist  + ", Consigner #" + consignerId + ", Price $" + price + "\n"
+				+ "---Checked In By #" + checkedInBy  + " on " + formatDateAdded  + ", In Bargin Bin: " + barginBin + "\n"
+				+ "---Has been sold: " + sold + ", Sold on " + formatDateSold  + ", Sold for $" + priceSold +  ", Sold By #" + soldBy + "\n";
+				 
+				
 	}
 
+	
+
+	// get and set
+	public int getId() {
+		return id;
+	}
+	
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -129,6 +137,22 @@ public class Record {
 
 	public void setSold(boolean sold) {
 		this.sold = sold;
+	}
+	
+	public int getCheckedInBy() {
+		return checkedInBy;
+	}
+
+	public void setCheckedInBy(int checkedInBy) {
+		this.checkedInBy = checkedInBy;
+	}
+
+	public int getSoldBy() {
+		return soldBy;
+	}
+
+	public void setSoldBy(int soldBy) {
+		this.soldBy = soldBy;
 	}
 
 }
