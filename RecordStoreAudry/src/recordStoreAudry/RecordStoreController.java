@@ -11,6 +11,8 @@ public class RecordStoreController {
 	private static int recordId;
 	private static int consignerId;
 	private static int paymentId;
+	private static int staffId;
+	private static int loginId; 
 	//store all the DB data for program to work with
 	//this way we don't need access the DB as much
 	private static LinkedList<Record> allRecords = new LinkedList<Record>();
@@ -449,6 +451,17 @@ public class RecordStoreController {
 	public int generatePaymentId() {
 		paymentId++;
 		return paymentId;
+	}
+
+	public int generateStaffId() {
+		staffId++;
+		return staffId;
+		
+	}
+	
+	public int generateLoginId() {
+		loginId++;
+		return loginId;
 	}
 
 

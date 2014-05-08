@@ -68,7 +68,7 @@ public class RecordStoreModel {
 				+ "Name varchar(40), UserName varchar(40), Password varchar(40), Manager boolean)";
 		
 		String createLoginTable = "CREATE TABLE Logins (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
-				+ "StaffId int, TimeIn date, TimeOut date)";
+				+ "StaffId int, TimeIn timestamp, TimeOut timestamp)";
 				
 
 		String deleteRecords = "DROP TABLE Records";
@@ -435,6 +435,65 @@ public class RecordStoreModel {
 
 		} catch (SQLException e) {
 			System.out.println("Error creating payment test data.");
+		}
+		
+		
+		///STAFF///
+		//data
+		String[] staffNames = { "Audry Wolters", "Mervyn Peake", "Mina Murray" };
+		String[] userNames = { "audrywolters", "mervynchan", "minarulez" };
+		String[] passwords = { "passw0rd", "meow", "mina" };
+
+		//statement
+		String staffInsert = "INSERT INTO Staff"
+				+ "(Name, UserName, Password)"
+				+ "VALUES (?, ?, ?)";
+		
+		//insert
+		try {
+			psInsert = connection.prepareStatement(staffInsert);
+			allStatements.add(psInsert);
+			for (int i=0; i<staffNames.length; i++) {
+				psInsert.setString(1, staffNames[i]);
+				psInsert.setString(2, userNames[i]);
+				psInsert.setString(3, passwords[i]);
+				psInsert.executeUpdate();
+				//update Id for controller
+				controller.generateStaffId();
+			}
+			System.out.println("inserted staff data");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error inserting staff test data");
+		}
+		
+		
+		///LOGIN///
+		//data
+		int[] staffIds = { 1, 2, 3 };
+		Timestamp[] timesIn = { Timestamp.valueOf("2014-05-01 23:03:20"), Timestamp.valueOf("2014-05-02 20:09:20"), Timestamp.valueOf("2014-05-03 24:00:20") };
+		Timestamp[] timesOut = { Timestamp.valueOf("2014-05-01 01:03:20"), Timestamp.valueOf("2014-05-01 24:03:20"), Timestamp.valueOf("2014-05-01 23:33:20") };
+		
+		//statment
+		String loginInsert = "INSERT INTO Logins"
+				+ "(StaffId, TimeIn, TimeOut)"
+				+ "VALUES (?, ?, ?)";
+		
+		//insert
+		try {
+			psInsert = connection.prepareStatement(loginInsert);
+			allStatements.add(psInsert);
+			for (int i=0; i<staffIds.length; i++ ) {
+				psInsert.setInt(1, staffIds[i]);
+				psInsert.setTimestamp(2, timesIn[i]);
+				psInsert.setTimestamp(3, timesOut[i]);
+				//update id for controller
+				controller.generateLoginId();
+				System.out.println("inserted staff data");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error inserting staff data");
 		}
 	}
 
