@@ -62,6 +62,9 @@ public class RecordStoreModel {
 
 		String createPaymentsTable = "CREATE TABLE Payments (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
 				+ "RecordId int, ConsignerId int, Outstanding boolean, AmountDue double, AmountPaid double, DateMade date)";
+		
+	//	String createStaffTable = "CREATE TABLE "
+		
 
 		String deleteRecords = "DROP TABLE Records";
 		String deleteConsigners = "DROP TABLE Consigners";
