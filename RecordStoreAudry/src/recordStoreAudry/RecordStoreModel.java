@@ -68,7 +68,7 @@ public class RecordStoreModel {
 				+ "Name varchar(40), UserName varchar(40), Password varchar(40), Manager boolean)";
 		
 		String createLoginTable = "CREATE TABLE Logins (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
-				+ "StaffId int, In date, Out date)";
+				+ "StaffId int, TimeIn date, TimeOut date)";
 				
 
 		String deleteRecords = "DROP TABLE Records";

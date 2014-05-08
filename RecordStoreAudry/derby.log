@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Thu May 08 15:22:50 CDT 2014:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.1.1 - (1458268): instance a816c00e-0145-dd80-b177-000007fabbb0 
+Thu May 08 16:07:01 CDT 2014:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.10.2.0 - (1582446): instance a816c00e-0145-dda9-269c-000007f8e840 
 on database directory /Users/BLACKTIEWHITENOISE/Git/RecordStore/RecordStoreAudry/recordStoreDB with class loader sun.misc.Launcher$AppClassLoader@58644d46 
 Loaded from file:/Users/BLACKTIEWHITENOISE/Git/RecordStore/RecordStoreAudry/lib/derby.jar
 java.vendor=Oracle Corporation
