@@ -99,7 +99,7 @@ public class RecordStoreModel {
 					statement.executeUpdate(deleteConsigners);
 					statement.executeUpdate(deletePayments);
 					statement.executeUpdate(deleteStaff);
-					//statement.executeUpdate(deleteLogins);
+					statement.executeUpdate(deleteLogins);
 					
 					// and recreate
 					statement.executeUpdate(createRecordsTable);
@@ -110,8 +110,8 @@ public class RecordStoreModel {
 					System.out.println("created table");
 					statement.executeUpdate(createStaffTable);
 					System.out.println("created staff table");
-					//statement.executeUpdate(createLoginTable);
-					//System.out.println("created login table");
+					statement.executeUpdate(createLoginTable);
+					System.out.println("created login table");
 
 				} catch (SQLException e) {
 					e.printStackTrace();
