@@ -67,7 +67,7 @@ public class RecordStoreModel {
 		String createStaffTable = "CREATE TABLE Staff (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),"
 				+ "Name varchar(40), UserName varchar(40), Password varchar(40), Manager boolean)";
 		
-		String createLoginTable = "CREATE TABEL Logins (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1),"
+		String createLoginTable = "CREATE TABLE Logins (Id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), "
 				+ "StaffId int, In date, Out date)";
 				
 
@@ -79,11 +79,13 @@ public class RecordStoreModel {
 
 		// try to create the tables
 		try {
+			statement.executeUpdate(createLoginTable);
 			statement.executeUpdate(createRecordsTable);
 			statement.executeUpdate(createConsignersTable);
 			statement.executeUpdate(createPaymentsTable);
 			statement.executeUpdate(createStaffTable);
-			statement.executeUpdate(createLoginTable);
+			statement.executeUpdate(deleteLogins);
+			
 			System.out.println("All Tables created");
 
 		} catch (SQLException se) {
@@ -97,16 +99,22 @@ public class RecordStoreModel {
 					statement.executeUpdate(deleteConsigners);
 					statement.executeUpdate(deletePayments);
 					statement.executeUpdate(deleteStaff);
-					statement.executeUpdate(deleteLogins);
+					//statement.executeUpdate(deleteLogins);
 					
 					// and recreate
 					statement.executeUpdate(createRecordsTable);
+					System.out.println("created table");
 					statement.executeUpdate(createConsignersTable);
+					System.out.println("created table");
 					statement.executeUpdate(createPaymentsTable);
+					System.out.println("created table");
 					statement.executeUpdate(createStaffTable);
-					statement.executeUpdate(createLoginTable);
+					System.out.println("created staff table");
+					//statement.executeUpdate(createLoginTable);
+					//System.out.println("created login table");
 
 				} catch (SQLException e) {
+					e.printStackTrace();
 					System.out.println("Something went wrong while creating tables.");
 				}
 			} 
