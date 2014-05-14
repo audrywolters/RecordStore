@@ -1,18 +1,18 @@
 package recordStoreAudry;
 
-import java.util.Calendar;
+import java.sql.Timestamp;
 
 public class Login {
 	private int id;
 	private int staffId;
-	private Calendar timeIn;
-	private Calendar timeOut;
+	private Timestamp timeIn;
+	private Timestamp timeOut;
 	
 	
 	//construct
-	public Login(Calendar timeIn, Calendar timeOut) {
+	public Login(Timestamp timeIn) {
 		this.timeIn = timeIn;
-		this.timeOut = timeOut;
+		//this.timeOut = timeOut;
 	}
 
 	//get and set
@@ -34,22 +34,22 @@ public class Login {
 		this.staffId = staffId;
 	}
 
-	public Calendar getTimeIn() {
+	public Timestamp getTimeIn() {
 		return timeIn;
 	}
 
 
-	public void setTimeIn(Calendar timeIn) {
+	public void setTimeIn(Timestamp timeIn) {
 		this.timeIn = timeIn;
 	}
 
 
-	public Calendar getTimeOut() {
+	public Timestamp getTimeOut() {
 		return timeOut;
 	}
 
 
-	public void setTimeOut(Calendar timeOut) {
+	public void setTimeOut(Timestamp timeOut) {
 		this.timeOut = timeOut;
 	}
 	

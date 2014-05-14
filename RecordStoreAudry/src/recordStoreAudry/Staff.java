@@ -5,13 +5,15 @@ public class Staff {
 	private String name;
 	private String username;
 	private String password;
+	private boolean manager;
 	
 	
 	//construct
-	public Staff(String name, String username, String password) {
+	public Staff(String name, String username, String password, boolean manager) {
 		this.name = name;
 		this.username = username;
 		this.password = password;
+		this.manager = manager;
 	}
 
 
@@ -54,6 +56,16 @@ public class Staff {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+
+	public boolean isManager() {
+		return manager;
+	}
+
+
+	public void setManager(boolean manager) {
+		this.manager = manager;
 	}
 	
 	

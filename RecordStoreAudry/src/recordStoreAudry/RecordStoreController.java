@@ -18,6 +18,8 @@ public class RecordStoreController {
 	private static LinkedList<Record> allRecords = new LinkedList<Record>();
 	private static LinkedList<Consigner> allConsigners = new LinkedList<Consigner>();
 	private static LinkedList<Payment> allPayments = new LinkedList<Payment>();
+	private static LinkedList<Staff> allStaff = new LinkedList<Staff>();
+	private static LinkedList<Login> allLogins = new LinkedList<Login>();
 
 	public static void main(String args[]) {
 		RecordStoreController controller = new RecordStoreController();
@@ -37,21 +39,178 @@ public class RecordStoreController {
 		model.requestAllRecords();
 		model.requestAllConsigners();
 		model.requestAllPayments();
+		model.requestAllStaff();
+		model.requestAllLogins();
 
 		//check if records need to be moved
+		// launch the menu, get the user's choice
+		boolean managerStatus = controller.login();
 		System.out.println("Welcome to Record Store Manager.");
+
+
+
 		System.out.println("\nNow Searching for Old Inventory.");
 		checkIfOld();
 
+		view.runMenu(managerStatus);
 
 
-
-		// launch the menu, get the user's choice
-		view.runMenu();
 
 		// clean up
 		model.cleanUp();
 	}
+
+
+	///CHECK USER CREDENTIALS///
+	public boolean login() {
+		boolean managerStatus = false;
+		boolean usernameMatch = false;
+		boolean usernameInvalid = true;
+		boolean passwordInvalid = true;
+
+		//check username
+		while(usernameInvalid) {
+			//get username
+			String entryUsername = view.getEntryUsername();
+
+			//check all staff for matching username
+			for (Staff staff : allStaff) {
+				//if match
+				if (entryUsername.equals(staff.getUsername())) {
+					//if manager set to manager
+					if (staff.isManager()) {
+						managerStatus = true;
+					}
+					//allow password loop to begin
+					usernameMatch = true;
+					//stop loop
+					usernameInvalid = false;					
+				}
+			}			
+		}	
+
+		//check password
+		//begin loop only if the correct username has been found
+		if (usernameMatch) {			
+			while (passwordInvalid) {
+				//get password
+				String entryPassword = view.getEntryPassword();
+				//check all staff for match
+				for (Staff staff : allStaff) {
+					//if match
+					if (entryPassword.equals(staff.getPassword())) {
+						passwordInvalid = false;
+					}
+				}
+			}
+
+		}
+		return managerStatus;
+	}
+
+
+
+
+
+
+	/*
+	//TODO FIX -buggy
+	public boolean login() {
+		boolean keepGoing = true;
+		boolean foundUsername = false;
+		boolean managerStatus = false;
+		String entryPassword = null;
+		String entryUsername = null;
+
+		//while this loop is told to keep going
+		while (keepGoing) {
+			//get the view to get a username
+			entryUsername = view.getUsername();
+
+			//loop through each staff member
+			for (Staff staff : allStaff) {
+
+				//if selected staff equals the entry
+				 if (entryUsername.equals(staff.getUsername())) {
+					//alert the next statement
+					foundUsername = true;
+					//keepGoing = false;
+					break;
+				} 
+
+
+				//if we are at the end of all Staff, quit and start over
+				//if (allStaff.indexOf(staff) == allStaff.size()) {
+					//System.out.println("Sorry. No usernames match.");
+					//entryUsername = view.getUsername();
+				//}
+
+
+				if(foundUsername) {
+					//get a password from the user
+					entryPassword = view.getPassword();
+					if (entryPassword.equals(staff.getPassword())) {
+						//run the menu
+						System.out.println("Welcome " + staff.getName());
+
+						//check if manager
+						if (staff.isManager()) {
+							managerStatus = true;
+						}
+
+						keepGoing = false;
+						break;
+
+					} else {
+						System.out.println("try again");
+					}
+				}
+			}
+
+		}
+		return managerStatus;
+	}
+
+	 */
+
+
+
+
+
+	/*
+	public void checkCredentials(String enteredUsername, String enteredPassword) {
+		boolean correct = false;
+		//String userPassword = null;
+
+		//while entry is incorrect
+		while (!correct) {
+
+			//loop through all staff
+			for (Staff staff : allStaff) {
+				//check if entry username equals saved username
+				if (enteredUsername.equals(staff.getUsername())) {
+
+
+					if (enteredPassword.equals(staff.getPassword())) {
+						System.out.println("Welcome " + staff.getName());
+						correct = true;
+						break;
+
+					} else {
+						System.out.println("Wrong combination");
+						view.loginScreen();
+					}
+
+				} else {
+
+				}
+			}
+		}
+	}
+	 */
+
+
+
 
 
 
@@ -413,28 +572,36 @@ public class RecordStoreController {
 		}
 
 	}
-	
-	
+
+
 	public void printAllPayments() {
 		for (Payment p : allPayments) {
 			System.out.println(p);
 		}
 	}
 
-	
+
 	///ADD A NEW RECORD TO STORAGE///
 	public void addToAllRecords(Record r) {
 		allRecords.add(r);
-
 	}
+
 	public void addToAllConsigners(Consigner c) {
 		allConsigners.add(c);
-
 	}
+
 	public void addToAllPayments(Payment p) {
 		allPayments.add(p);
 	}
-	
+
+	public void addToAllStaff(Staff s) {
+		allStaff.add(s);
+	}
+
+	public void addToAllLogins(Login l) {
+		allLogins.add(l);
+	}
+
 
 
 	//this keeps track of ids in the java storage - matches the DB id
@@ -447,7 +614,7 @@ public class RecordStoreController {
 		consignerId++;
 		return consignerId;
 	}
-	
+
 	public int generatePaymentId() {
 		paymentId++;
 		return paymentId;
@@ -456,13 +623,17 @@ public class RecordStoreController {
 	public int generateStaffId() {
 		staffId++;
 		return staffId;
-		
+
 	}
-	
+
 	public int generateLoginId() {
 		loginId++;
 		return loginId;
 	}
+
+
+
+
 
 
 

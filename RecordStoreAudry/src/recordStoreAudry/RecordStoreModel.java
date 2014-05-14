@@ -1,8 +1,6 @@
 package recordStoreAudry;
 
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
@@ -42,6 +40,7 @@ public class RecordStoreModel {
 			allStatements.add(statement);
 
 		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 			System.out.println("Could not connect to the Database.");
 		} catch (SQLException se) {
 			System.out.println("Could not connect to the Database.");
@@ -200,6 +199,8 @@ public class RecordStoreModel {
 		
 		
 	}
+	
+	
 
 	///UPDATE SOLD RECORD TO DB///
 	public boolean updateSoldRecord(Record record) {	
@@ -223,6 +224,7 @@ public class RecordStoreModel {
 			return false;
 		}
 	}
+	
 	
 	
 	///UPDATE PAID FOR PAYMENT///
@@ -441,13 +443,14 @@ public class RecordStoreModel {
 		///STAFF///
 		//data
 		String[] staffNames = { "Audry Wolters", "Mervyn Peake", "Mina Murray" };
-		String[] userNames = { "audrywolters", "mervynchan", "minarulez" };
-		String[] passwords = { "passw0rd", "meow", "mina" };
+		String[] userNames = { "audry", "mervyn", "mina" };
+		String[] passwords = { "aud", "mer", "min" };
+		boolean[] managers = { true, false, false };
 
 		//statement
 		String staffInsert = "INSERT INTO Staff"
-				+ "(Name, UserName, Password)"
-				+ "VALUES (?, ?, ?)";
+				+ "(Name, UserName, Password, Manager)"
+				+ "VALUES (?, ?, ?, ?)";
 		
 		//insert
 		try {
@@ -457,6 +460,7 @@ public class RecordStoreModel {
 				psInsert.setString(1, staffNames[i]);
 				psInsert.setString(2, userNames[i]);
 				psInsert.setString(3, passwords[i]);
+				psInsert.setBoolean(4, managers[i]);
 				psInsert.executeUpdate();
 				//update Id for controller
 				controller.generateStaffId();
@@ -489,8 +493,8 @@ public class RecordStoreModel {
 				psInsert.setTimestamp(3, timesOut[i]);
 				//update id for controller
 				controller.generateLoginId();
-				System.out.println("inserted staff data");
 			}
+			System.out.println("inserted login data");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println("Error inserting staff data");
@@ -505,6 +509,7 @@ public class RecordStoreModel {
 		String fetchAllRecords = "SELECT * FROM Records";
 		try {
 			rs = statement.executeQuery(fetchAllRecords);
+			
 		} catch (SQLException se) {
 			System.out.println("Error fetching all records.");
 		}
@@ -600,6 +605,73 @@ public class RecordStoreModel {
 
 		}
 	}
+	
+	
+	///GET ALL STAFF AND STORE///
+	public void requestAllStaff() {
+		//fetch all data
+		String fetchAllStaff = "SELECT * FROM Staff";
+		try {
+			rs = statement.executeQuery(fetchAllStaff);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error fetching staff");
+		}
+		
+		//store data
+		try {
+			while (rs.next()) {  
+				int id = rs.getInt("Id");
+				String name = rs.getString("Name");
+				String username = rs.getString("UserName");
+				String password = rs.getString("Password");
+				boolean manager = rs.getBoolean("Manager");
+				Staff s = new Staff(name, username, password, manager);
+				s.setId(id);
+				controller.addToAllStaff(s);
+			}
+			System.out.println("Added all staff to storage");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error storing staff data");
+		}
+	}
+	
+
+	
+	///GET ALL LOGINS AND STORE///
+	public void requestAllLogins() {
+		String fetchAllLogins = "SELECT * FROM Logins";
+		//fetch all data
+		try {
+			rs = statement.executeQuery(fetchAllLogins);
+			System.out.println("got a rs");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error fetching logins");
+		}
+		
+		//store data
+		try {
+			while (rs.next()) {
+				//fetch from result set
+				int id = rs.getInt("Id");
+				Timestamp timeIn = rs.getTimestamp("TimeIn");
+				Timestamp timeOut = rs.getTimestamp("TimeOut");
+				//store in login object
+				Login l = new Login(timeIn);
+				l.setTimeOut(timeOut);
+				l.setId(id);
+				controller.addToAllLogins(l);
+				System.out.println("Added logins to storage.");
+				
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error storing login");
+		}
+		
+	}
 
 
 
@@ -639,6 +711,8 @@ public class RecordStoreModel {
 			System.out.println("Couldn't disconnect from database!");
 		}
 	}
+
+
 
 
 
