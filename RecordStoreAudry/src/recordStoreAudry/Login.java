@@ -10,15 +10,27 @@ public class Login {
 	
 	
 	//construct
-	public Login(Timestamp timeIn) {
+	public Login(int staffId, Timestamp timeIn) {
+		this.staffId = staffId;
 		this.timeIn = timeIn;
 		//this.timeOut = timeOut;
 	}
 
+	
+	
+	//to string
+	@Override
+	public String toString() {
+		return "Login [id=" + id + ", staffId=" + staffId + ", timeIn="
+				+ timeIn + ", timeOut=" + timeOut + "]";
+	}
+
+	
 	//get and set
 	public int getId() {
 		return id;
 	}
+
 
 	public void setId(int id) {
 		this.id = id;

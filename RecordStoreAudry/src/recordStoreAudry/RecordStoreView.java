@@ -11,6 +11,24 @@ public class RecordStoreView {
 	private RecordStoreController controller;
 	private NewScanner scanner = new NewScanner();
 
+	/*
+	//menu variables
+	private final int QUIT = 0;
+	private final int LOGOUT = 1;
+	private final int ADD_RECORD = 2;
+	private final int SELL_RECORD = 3;
+	private final int VIEW_ALL_RECORDS = 4;
+	private final int DELETE_RECORD = 5;
+	private final int ADD_CONSIGNER = 6;
+	private final int VIEW_ONE_CONSIGNER = 7;
+	private final int VIEW_ALL_CONSIGNERS = 8;
+	private final int VIEW_ALL_PAYMENTS = 9;
+	private final int VIEW_OUTSTANDING_PAYMENTS = 10;
+	private final int MAKE_PAYMENT = 11;
+	private final int MAKE_REPORT = 12;
+	private final int CHANGE_PASSWORD = 13;
+	private final int ADD_STAFF = 14;
+	*/
 
 
 	// constructor
@@ -23,27 +41,33 @@ public class RecordStoreView {
 	// display the menu and get the choice #
 	public void runMenu(boolean managerStatus) {
 
+
+
+
+		//i would like to have sub menus for each upper case header
+		//but I don't think I'll get to it
 		while (true) {
 			System.out.println("-----------------------------\n"
-					+ "RECORDS \n"
-					+ "1. Add a new Record \n"
-					+ "2. Sell a Record \n"
-					+ "3. View all Records \n"
-					+ "4. Delete a Record \n" 
-					+ "CONSIGNERS \n"
-					+ "5. Add a new Consigner \n" 
-					+ "6. View details about a Consigner \n"
-					+ "7. View all Consigners \n" 
-					+ "PAYMENTS \n"
-					+ "8. View all payments \n"
-					+ "9. View outstanding payments \n"
-					+ "MANAGER \n"
-					+ "10. Make a payment \n"
-					+ "11. Make Report \n"
-					+ "12. Change password \n"
-					+ "13. Add Staff member \n"
-					+ "QUIT \n"
+					+ "PROGRAM \n"
 					+ "0. Quit Record Store Manager \n"
+					+ "1. Logout/Login \n"
+					+ "RECORDS \n"
+					+ "2. Add a new Record \n"
+					+ "3. Sell a Record \n"
+					+ "4. View all Records \n"
+					+ "5. Delete a Record \n" 
+					+ "CONSIGNERS \n"
+					+ "6. Add a new Consigner \n" 
+					+ "7. View details about a Consigner \n"
+					+ "8. View all Consigners \n" 
+					+ "PAYMENTS \n"
+					+ "9. View all payments \n"
+					+ "10. View outstanding payments \n"
+					+ "MANAGER \n"
+					+ "11. Make a payment \n"
+					+ "12. Make Report \n"
+					+ "13. Change password \n"
+					+ "14. Add Staff member \n"					
 					+ "-----------------------------");
 
 
@@ -56,42 +80,45 @@ public class RecordStoreView {
 					userChoice = scanner.getScanner().nextInt();
 
 
-					if (userChoice > 0 && userChoice <= 13) {
+					if (userChoice >= 1 && userChoice <= 14) {
 						runTask(userChoice);
 
 					} else if (userChoice == 0) {
 						//go to shutdown procedures
 						break;
 					} else {
-						System.out.println("Please enter a number*** [ 0 - 13 ]");
+						System.out.println("Please enter a number*** [ 0 - 14 ]");
 					}
 
 
 				} catch (InputMismatchException e) {
-					System.out.println("Please enter a number [ 0 - 13 ]");
+					System.out.println("Please enter a number [ 0 - 14 ]");
 
 				} 
 
+			//if regular staff
 			} else {
-				
+
 				try {
 					//Scanner sMenu = new Scanner(System.in);
 					userChoice = scanner.getScanner().nextInt();
 
+					if (userChoice >= 11 && userChoice <= 14) {
+						System.out.println("You must be a manager to choose that option.");
 
-					if (userChoice > 0 && userChoice <= 8) {
+					} else if (userChoice >= 1 && userChoice <= 10) {
 						runTask(userChoice);
 
 					} else if (userChoice == 0) {
 						//go to shutdown procedures
 						break;
 					} else {
-						System.out.println("Please enter a number*** [ 0 - 8 ]");
+						System.out.println("Please enter a number [ 0 - 10 ]");
 					}
 
 
 				} catch (InputMismatchException e) {
-					System.out.println("Please enter a number [ 0 - 8 ]");
+					System.out.println("Please enter a number [ 0 - 10 ]");
 
 				} 
 			}
@@ -109,19 +136,23 @@ public class RecordStoreView {
 		case 0: { //quit
 			break;
 			
-		} case 1: { //add a new record
+		} case 1: { //logout/login
+			controller.logout();
+			break;
+
+		} case 2: { //add a new record
 			addUserRecord();
 			break;
 
-		} case 2: { //sell a record
+		} case 3: { //sell a record
 			controller.sellRecord();
 			break;
 
-		} case 3: { //view all records
+		} case 4: { //view all records
 			controller.printAllRecords();
 			break;
 
-		} case 4: { //delete a record
+		} case 5: { //delete a record
 			Record record = controller.searchForRecord();
 			int userChoiceEdit = editOrDeleteMenu();
 			if (userChoiceEdit == 1) {
@@ -129,31 +160,31 @@ public class RecordStoreView {
 			} 
 			break;
 
-		} case 5: { //add a new consigner
+		} case 6: { //add a new consigner
 			Consigner consigner = addConsigner();
 			controller.addConsigner(consigner);
 			break;
 
-		} case 6: { //view one consigner
+		} case 7: { //view one consigner
 			Consigner consigner = controller.searchForConsigner();
 			if (consigner != null) {
 				printDetailedConsigner(consigner);
 			}
 			break;
 
-		} case 7: { //view all consigners
+		} case 8: { //view all consigners
 			controller.printAllConsigners();
 			break;
 
-		} case 8: { //view all payments
+		} case 9: { //view all payments
 			controller.printAllPayments();
 			break;
 
-		} case 9: { //view outstanding payments
+		} case 10: { //view outstanding payments
 			controller.findOutsandingPayments();
 			break;
 
-		} case 10: { //make a payment
+		} case 11: { //make a payment
 			Payment payment = controller.searchForPayment();
 			if (payment != null) {
 				int payUserChoice = payConsigner(payment);
@@ -162,17 +193,17 @@ public class RecordStoreView {
 				} 
 			}
 			break;
-		
-	
-		} case 11: { //make a report
+
+
+		} case 12: { //make a report
 			System.out.println("not yet implemented.");
 			break;
-		
-		} case 12: { //change password
+
+		} case 13: { //change password
 			System.out.println("not yet implemented.");
 			break;
-			
-		} case 13: { //add staff member
+
+		} case 14: { //add staff member
 			System.out.println("not yet implemented.");
 			break;
 		}
@@ -180,12 +211,14 @@ public class RecordStoreView {
 	}
 
 
+	//get username
 	public String getEntryUsername() {
 		System.out.println("Enter your username:");
 		String username = scanner.getScanner().nextLine();
 		return username;
 	}
 
+	//get password
 	public String getEntryPassword() {
 		System.out.println("Enter your password:");
 		String password = scanner.getScanner().nextLine();
@@ -193,7 +226,7 @@ public class RecordStoreView {
 	}
 
 
-	
+
 
 	//menu and view for adding a record to the database
 	private void addUserRecord() {

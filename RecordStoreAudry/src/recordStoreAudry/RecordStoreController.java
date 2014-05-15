@@ -1,5 +1,6 @@
 package recordStoreAudry;
 
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
@@ -20,6 +21,8 @@ public class RecordStoreController {
 	private static LinkedList<Payment> allPayments = new LinkedList<Payment>();
 	private static LinkedList<Staff> allStaff = new LinkedList<Staff>();
 	private static LinkedList<Login> allLogins = new LinkedList<Login>();
+	//save the id of who is logged in
+	private static int userLoggedIn = 0;
 
 	public static void main(String args[]) {
 		RecordStoreController controller = new RecordStoreController();
@@ -42,18 +45,10 @@ public class RecordStoreController {
 		model.requestAllStaff();
 		model.requestAllLogins();
 
-		//check if records need to be moved
+
 		// launch the menu, get the user's choice
-		boolean managerStatus = controller.login();
 		System.out.println("Welcome to Record Store Manager.");
-
-
-
-		System.out.println("\nNow Searching for Old Inventory.");
-		checkIfOld();
-
-		view.runMenu(managerStatus);
-
+		controller.login();
 
 
 		// clean up
@@ -62,7 +57,7 @@ public class RecordStoreController {
 
 
 	///CHECK USER CREDENTIALS///
-	public boolean login() {
+	public void login() {
 		boolean managerStatus = false;
 		boolean usernameMatch = false;
 		boolean usernameInvalid = true;
@@ -99,118 +94,60 @@ public class RecordStoreController {
 				for (Staff staff : allStaff) {
 					//if match
 					if (entryPassword.equals(staff.getPassword())) {
+						//get the current date/time
+						java.util.Date date= new java.util.Date();
+						Timestamp now = new Timestamp(date.getTime());
+						//save who is logged in in the controller
+						userLoggedIn = staff.getId();
+						//add the new login to storage
+						Login login = new Login(staff.getId(), now);
+						int loginId = generateLoginId();
+						login.setId(loginId);
+						allLogins.add(login);
 						passwordInvalid = false;
 					}
 				}
 			}
 
 		}
-		return managerStatus;
+
+		//search inventory for old records
+		System.out.println("\nNow Searching for Old Inventory.");
+		//tell check if old what the manager status is
+		checkIfOld(managerStatus);
+
+
 	}
 
 
-
-
-
-
-	/*
-	//TODO FIX -buggy
-	public boolean login() {
-		boolean keepGoing = true;
-		boolean foundUsername = false;
-		boolean managerStatus = false;
-		String entryPassword = null;
-		String entryUsername = null;
-
-		//while this loop is told to keep going
-		while (keepGoing) {
-			//get the view to get a username
-			entryUsername = view.getUsername();
-
-			//loop through each staff member
-			for (Staff staff : allStaff) {
-
-				//if selected staff equals the entry
-				 if (entryUsername.equals(staff.getUsername())) {
-					//alert the next statement
-					foundUsername = true;
-					//keepGoing = false;
-					break;
-				} 
-
-
-				//if we are at the end of all Staff, quit and start over
-				//if (allStaff.indexOf(staff) == allStaff.size()) {
-					//System.out.println("Sorry. No usernames match.");
-					//entryUsername = view.getUsername();
-				//}
-
-
-				if(foundUsername) {
-					//get a password from the user
-					entryPassword = view.getPassword();
-					if (entryPassword.equals(staff.getPassword())) {
-						//run the menu
-						System.out.println("Welcome " + staff.getName());
-
-						//check if manager
-						if (staff.isManager()) {
-							managerStatus = true;
-						}
-
-						keepGoing = false;
-						break;
-
-					} else {
-						System.out.println("try again");
-					}
-				}
+	///LOGOUT///
+	public void logout() {
+		//search all logins for the staff member currently logged in
+		for (Login l : allLogins) {
+			if (userLoggedIn == l.getStaffId()) {
+				//get current time/date
+				java.util.Date date= new java.util.Date();
+				Timestamp now = new Timestamp(date.getTime());
+				//and set it
+				l.setTimeOut(now);
+				//update login in database
+				model.updateLogin(l);
+				break;
 			}
+		}		
 
+		System.out.println("Goodbye.");
+
+		//TODO delete debug
+		//debug
+		for (Login l : allLogins) {
+			System.out.println(l);
 		}
-		return managerStatus;
+		
+		
+		//run login screen
+		login();
 	}
-
-	 */
-
-
-
-
-
-	/*
-	public void checkCredentials(String enteredUsername, String enteredPassword) {
-		boolean correct = false;
-		//String userPassword = null;
-
-		//while entry is incorrect
-		while (!correct) {
-
-			//loop through all staff
-			for (Staff staff : allStaff) {
-				//check if entry username equals saved username
-				if (enteredUsername.equals(staff.getUsername())) {
-
-
-					if (enteredPassword.equals(staff.getPassword())) {
-						System.out.println("Welcome " + staff.getName());
-						correct = true;
-						break;
-
-					} else {
-						System.out.println("Wrong combination");
-						view.loginScreen();
-					}
-
-				} else {
-
-				}
-			}
-		}
-	}
-	 */
-
-
-
 
 
 
@@ -340,7 +277,7 @@ public class RecordStoreController {
 
 
 	///CHECK IF BARGIN BIN / CHARITY ///
-	public static void checkIfOld() {
+	public static void checkIfOld(boolean managerStatus) {
 		//get 30 days ago
 		Calendar thirtyDaysAgo = new GregorianCalendar();
 		thirtyDaysAgo.add(Calendar.DAY_OF_MONTH, -30);
@@ -352,8 +289,8 @@ public class RecordStoreController {
 		LinkedList<Integer> deleteRecordsIds = new LinkedList<Integer>();
 
 		for (Record r : allRecords) {
-			//compare dateAdded to one year ago
-			if (r.getDateAdded().before(oneYearAgo)) {
+			//compare dateAdded to one year ago 
+			if (r.getDateAdded().before(oneYearAgo) ) {  
 				boolean successful;
 				//if older ask user what to do with it
 				int userChoice = view.moveRecordOrCall(r, "Charity");
@@ -369,8 +306,8 @@ public class RecordStoreController {
 						System.out.println("***Delete using main menu.***");
 					}
 				}
-				//compare date added to inventory and 30 days ago, 
-			} else if (r.getDateAdded().before(thirtyDaysAgo)) { 
+				//compare date added to inventory and 30 days ago, and check if it's already in the bargin bin
+			} else if (r.getDateAdded().before(thirtyDaysAgo) && !r.isBarginBin()) {  //and not in bargin bin
 				boolean successful;
 				//if older ask user what to do with it
 				int userChoice = view.moveRecordOrCall(r, "Bargin Bin");
@@ -411,7 +348,12 @@ public class RecordStoreController {
 				}
 			}
 		}
+
+		//now run the menu and tell menu what the manager status is
+		view.runMenu(managerStatus);
 	}
+
+
 
 
 	///PRINT ALL CONSIGNERS///
@@ -630,6 +572,9 @@ public class RecordStoreController {
 		loginId++;
 		return loginId;
 	}
+
+
+
 
 
 
