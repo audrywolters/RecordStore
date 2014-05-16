@@ -6,6 +6,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 
 public class RecordStoreController {
+	
 	private static RecordStoreModel model;
 	private static RecordStoreView view;
 	//ids kept track of here
@@ -23,6 +24,10 @@ public class RecordStoreController {
 	private static LinkedList<Login> allLogins = new LinkedList<Login>();
 	//save the id of who is logged in
 	private static int userLoggedIn = 0;
+	//barign bin duration
+	private static int bbDaysOld;
+	private static double bbPrice;
+	private static double consignerPercent;
 
 	public static void main(String args[]) {
 		RecordStoreController controller = new RecordStoreController();
@@ -37,6 +42,8 @@ public class RecordStoreController {
 
 		// insert data
 		model.addTestData();
+		
+		controller.updateConfig();
 
 		// store all data in linked lists
 		model.requestAllRecords();
@@ -56,6 +63,22 @@ public class RecordStoreController {
 	}
 
 
+	private void updateConfig() {
+		//retrieve configuration data from DB
+		Number[] configs = model.fetchConfigurations();
+		
+		//parse the data
+		int daysOld = (Integer) configs[0];
+		double price = (Double) configs[1];
+		double percent = (Double) configs[2];
+		
+		//set the data
+		RecordStoreController.setBbDaysOld(daysOld);
+		RecordStoreController.setBbPrice(price);
+		RecordStoreController.setConsignerPercent(percent);
+	}
+
+
 	///CHECK USER CREDENTIALS///
 	public void login() {
 		boolean managerStatus = false;
@@ -63,6 +86,7 @@ public class RecordStoreController {
 		boolean usernameInvalid = true;
 		boolean passwordInvalid = true;
 
+		System.out.println("\nHi. Enter your login name and password:");
 		//check username
 		while(usernameInvalid) {
 			//get username
@@ -79,7 +103,8 @@ public class RecordStoreController {
 					//allow password loop to begin
 					usernameMatch = true;
 					//stop loop
-					usernameInvalid = false;					
+					usernameInvalid = false;	
+					break;
 				}
 			}			
 		}	
@@ -98,13 +123,14 @@ public class RecordStoreController {
 						java.util.Date date= new java.util.Date();
 						Timestamp now = new Timestamp(date.getTime());
 						//save who is logged in in the controller
-						userLoggedIn = staff.getId();
+						setUserLoggedIn(staff.getId());
 						//add the new login to storage
 						Login login = new Login(staff.getId(), now);
 						int loginId = generateLoginId();
 						login.setId(loginId);
 						allLogins.add(login);
 						passwordInvalid = false;
+						break;
 					}
 				}
 			}
@@ -121,10 +147,18 @@ public class RecordStoreController {
 
 
 	///LOGOUT///
-	public void logout() {
-		//search all logins for the staff member currently logged in
+	public void logoutAndLogin() {
+		logoutUser();	
+
+		//run login screen
+		login();
+	}
+
+
+
+	public void logoutUser() {
 		for (Login l : allLogins) {
-			if (userLoggedIn == l.getStaffId()) {
+			if (getUserLoggedIn() == l.getStaffId()) {
 				//get current time/date
 				java.util.Date date= new java.util.Date();
 				Timestamp now = new Timestamp(date.getTime());
@@ -136,19 +170,65 @@ public class RecordStoreController {
 			}
 		}		
 
-		System.out.println("Goodbye.");
-
-		//TODO delete debug
-		//debug
-		for (Login l : allLogins) {
-			System.out.println(l);
-		}
-		
-		
-		//run login screen
-		login();
+		System.out.println("Logged Out.");
 	}
 
+
+
+
+	public void generateReport() {
+		int unsoldRecords = 0;
+		for (Record record : allRecords) {
+			if (!record.isSold()) {
+				unsoldRecords++;
+			}
+		}
+		System.out.println("There are a total of " + unsoldRecords + " unsold records in the inventory.");
+
+		printAllRecords();
+
+	}
+
+
+
+
+	public void addUserRecord() {
+		//check if too many copies
+		String[] titleArtist = view.getTitleArtist();
+
+		//check to see if there are other copies
+		boolean tooMany = tooManyCopies(titleArtist[0], titleArtist[1]);
+		if(tooMany) {
+			System.out.println("Sorry, there are too many copies of " + titleArtist[0]);
+
+		} else {
+			//print prices
+			LinkedList<Double> commonPrices = findCommonPrice(titleArtist[0], titleArtist[1]);
+			System.out.println("Average Price = " + commonPrices.get(0));
+			System.out.println("Lowest Price = " + commonPrices.get(1));
+			System.out.println("Highest Price = " + commonPrices.get(2));
+
+			//get the user to set a price
+			double price = view.getPrice();
+			
+			//get the consigner id from user
+			int consignerId = view.getIdFromUser("Consigner");
+
+			//date is now
+			Calendar dateAdded = new GregorianCalendar();
+
+			//get whomever is logged in
+			int checkedInBy = RecordStoreController.getUserLoggedIn();
+
+			//create record
+			Record record = new Record(titleArtist[0], titleArtist[1], consignerId, price, checkedInBy, dateAdded);
+
+			//send to DB
+			requestAddRecord(record);
+
+		}
+
+	}
 
 
 	///ADD NEW RECORD////
@@ -161,8 +241,6 @@ public class RecordStoreController {
 			//tick the id
 			int tempId = generateRecordId();
 			record.setId(tempId);
-			//debug
-			System.out.println("New Id: " + tempId);
 		}
 	}
 
@@ -182,12 +260,20 @@ public class RecordStoreController {
 			}
 		}
 
-		if (copies >= 2) {
+		if (copies >= 4) {
 			return true;
 		} else {
 			return false;
 		}
 
+
+	}
+
+
+	///FIND COMMON PRICES OF RECORD///
+	public LinkedList<Double> findCommonPrice(String title, String artist) {
+		LinkedList<Double> commonPrices = model.fetchCommonPrice(title, artist);
+		return commonPrices;
 
 	}
 
@@ -212,13 +298,16 @@ public class RecordStoreController {
 			Calendar now = GregorianCalendar.getInstance();
 			//don't parse here, parse in sql
 			record.setDateSold(now);
+			//get the logged in staff id
+			int soldBy = userLoggedIn;
+			record.setSoldBy(soldBy);
 
 			//prep payment
 			int payId = generatePaymentId();
 			int recId = record.getId();
 			int consignId = record.getConsignerId();
 			//consigner receives half of the total price
-			double amountDue = record.getPrice() * .5 ;
+			double amountDue = record.getPrice() * consignerPercent;
 			boolean outstanding = true;
 			Payment payment = new Payment(recId, consignId, outstanding);
 			payment.setId(payId);
@@ -279,8 +368,8 @@ public class RecordStoreController {
 	///CHECK IF BARGIN BIN / CHARITY ///
 	public static void checkIfOld(boolean managerStatus) {
 		//get 30 days ago
-		Calendar thirtyDaysAgo = new GregorianCalendar();
-		thirtyDaysAgo.add(Calendar.DAY_OF_MONTH, -30);
+		Calendar numbOfDaysAgo = new GregorianCalendar();
+		numbOfDaysAgo.add(Calendar.DAY_OF_MONTH, -bbDaysOld);
 		//get one year ago
 		Calendar oneYearAgo = new GregorianCalendar();
 		oneYearAgo.add(Calendar.YEAR, -1);
@@ -307,13 +396,15 @@ public class RecordStoreController {
 					}
 				}
 				//compare date added to inventory and 30 days ago, and check if it's already in the bargin bin
-			} else if (r.getDateAdded().before(thirtyDaysAgo) && !r.isBarginBin()) {  //and not in bargin bin
+			} else if (r.getDateAdded().before(numbOfDaysAgo) && !r.isBarginBin()) {  //and not in bargin bin
 				boolean successful;
 				//if older ask user what to do with it
 				int userChoice = view.moveRecordOrCall(r, "Bargin Bin");
 
 				if (userChoice == 1) {
 					//move record to bargin bin and update in inventory
+					r.setBarginBin(true);
+					r.setPrice(bbPrice);
 					successful = model.updateInventoryStatus(r);
 					if(successful) {
 						r.setBarginBin(true);
@@ -473,7 +564,6 @@ public class RecordStoreController {
 
 			if (payment.getId() == allPayments.size()) {
 				//if the loop completes and hasn't found anything, print sorry message 
-				//TODO fix no payment found loop
 				System.out.println("Sorry. No matches found.");					
 			}
 		}
@@ -492,7 +582,7 @@ public class RecordStoreController {
 
 
 	///UPDATE PAYMENT///
-	public void updatePaymentCont(Payment payment) {
+	public void updatePayment(Payment payment) {
 		//prep variables
 		Calendar dateMade = new GregorianCalendar();
 		double amountDue = 0;
@@ -503,6 +593,7 @@ public class RecordStoreController {
 		payment.setAmountDue(amountDue);
 		payment.setAmountPaid(amountPaid);
 		payment.setOutstanding(outstanding);
+		payment.setPaymentMadeBy(userLoggedIn);
 
 		//call the DB to update itself
 		boolean successful = model.updatePayment(payment);
@@ -520,6 +611,38 @@ public class RecordStoreController {
 		for (Payment p : allPayments) {
 			System.out.println(p);
 		}
+	}
+
+
+	///CONFIGURE BARGIN BIN AND PAYMENT RATIO///
+	public void configurePolicies() {
+		int userChoice = view.configureMenu();
+		
+		switch (userChoice) {
+
+		case 1: { //bb duration
+			int daysOld = view.getDaysOld();
+			model.updateBbDaysOld(daysOld);
+			RecordStoreController.setBbDaysOld(-daysOld);
+			break;
+			
+		} case 2: { //bb price
+			double price = view.getUserBbPrice();
+			model.updateBbPrice(price);
+			RecordStoreController.setBbPrice(price);
+			break;
+			
+		} case 3: { //consigner percent
+			double percent = view.getUserPercent();
+			model.updateConsignerPercent(percent);
+			RecordStoreController.setConsignerPercent(percent);
+			break;
+		}
+		}	
+		
+		
+			
+		
 	}
 
 
@@ -544,6 +667,13 @@ public class RecordStoreController {
 		allLogins.add(l);
 	}
 
+
+
+	public void quit() {
+		logoutUser();
+		model.cleanUp();
+		System.exit(0);
+	}
 
 
 	//this keeps track of ids in the java storage - matches the DB id
@@ -574,9 +704,44 @@ public class RecordStoreController {
 	}
 
 
+	public static int getUserLoggedIn() {
+		return userLoggedIn;
+	}
 
 
+	public static void setUserLoggedIn(int usrLgdIn) {
+		userLoggedIn = usrLgdIn;
+	}
 
+
+	public static int getBbDaysOld() {
+		return bbDaysOld;
+	}
+
+
+	public static void setBbDaysOld(int BbDaysOld) {
+		bbDaysOld = BbDaysOld;
+	}
+
+
+	public static double getBbPrice() {
+		return bbPrice;
+	}
+
+
+	public static void setBbPrice(double bbPrice) {
+		RecordStoreController.bbPrice = bbPrice;
+	}
+
+
+	public static double getConsignerPercent() {
+		return consignerPercent;
+	}
+
+
+	public static void setConsignerPercent(double consignerPercent) {
+		RecordStoreController.consignerPercent = consignerPercent;
+	}  
 
 
 
